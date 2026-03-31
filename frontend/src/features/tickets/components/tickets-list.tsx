@@ -36,6 +36,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/shared/components/ui/pagination";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   Dialog,
@@ -97,10 +105,19 @@ export function TicketsList() {
 
   if (isPending) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
+      <Card
+        className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+        size="sm"
+      >
+        <CardHeader className="space-y-0 border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="mt-2 h-3.5 w-72 max-w-full" />
+        </CardHeader>
+        <CardContent className="space-y-3 p-4 sm:p-5">
+          <Skeleton className="h-10 w-full max-w-md" />
+          <Skeleton className="h-52 w-full" />
+        </CardContent>
+      </Card>
     );
   }
 
@@ -116,12 +133,12 @@ export function TicketsList() {
     const hasStatus = Boolean(statusFilter);
     const emptyTitle =
       hasDay && hasStatus
-        ? "Nenhum ticket com estes filtros"
+        ? "Nenhum chamado com estes filtros"
         : hasDay
-          ? "Nenhum ticket neste dia"
+          ? "Nenhum chamado neste dia"
           : hasStatus
-            ? "Nenhum ticket neste estado"
-            : "Sem tickets";
+            ? "Nenhum chamado neste estado"
+            : "Sem chamados";
     const emptyDescription =
       hasDay && hasStatus
         ? "Altera a data, o estado ou remove os filtros."
@@ -129,11 +146,20 @@ export function TicketsList() {
           ? "Tenta outra data ou remove o filtro."
           : hasStatus
             ? "Escolhe outro estado ou remove o filtro."
-            : "Ainda não existem tickets nesta página.";
+            : "Ainda não existem chamados nesta vista.";
 
     return (
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Card
+        className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+        size="sm"
+      >
+        <CardHeader className="flex flex-col gap-4 space-y-0 border-b border-border/80 bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="space-y-1">
+            <CardTitle>Registo de chamados</CardTitle>
+            <CardDescription>
+              Aplica filtros ou cria um novo pedido para começar.
+            </CardDescription>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <FilterCalendarControl
               dayFilter={dayFilter}
@@ -155,11 +181,12 @@ export function TicketsList() {
               className="gap-2"
             >
               <PlusIcon className="size-4 shrink-0" />
-              Novo ticket
+              Novo chamado
             </Button>
           </div>
-        </div>
-        <EmptyState title={emptyTitle} description={emptyDescription}>
+        </CardHeader>
+        <CardContent className="px-4 py-10 sm:px-5">
+          <EmptyState title={emptyTitle} description={emptyDescription}>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {hasStatus ? (
               <Button
@@ -181,11 +208,12 @@ export function TicketsList() {
             {!hasDay && !hasStatus ? (
               <Button type="button" onClick={() => setCreateOpen(true)} className="gap-2">
                 <PlusIcon className="size-4 shrink-0" />
-                Criar ticket
+                Criar chamado
               </Button>
             ) : null}
           </div>
         </EmptyState>
+        </CardContent>
         <TicketsListDialogs
           editTicket={editTicket}
           onEditOpenChange={(open) => {
@@ -195,7 +223,7 @@ export function TicketsList() {
           createOpen={createOpen}
           onCreateOpenChange={setCreateOpen}
         />
-      </div>
+      </Card>
     );
   }
 
@@ -205,38 +233,49 @@ export function TicketsList() {
       : [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterCalendarControl
-            dayFilter={dayFilter}
-            calendarOpen={calendarOpen}
-            onOpenChange={setCalendarOpen}
-            onSelectDay={(d) => {
-              setDayFilter(formatDateOnlyLocal(d));
-              setPage(1);
-              setCalendarOpen(false);
-            }}
-            onClear={() => {
-              setDayFilter(undefined);
-              setPage(1);
-            }}
-          />
-          <Button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="gap-2"
-          >
-            <PlusIcon className="size-4 shrink-0" />
-            Novo ticket
-          </Button>
+    <Card
+      className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+      size="sm"
+    >
+      <CardHeader className="flex flex-col gap-4 space-y-0 border-b border-border/80 bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="space-y-1">
+          <CardTitle>Registo de chamados</CardTitle>
+          <CardDescription>
+            Ordenação e filtro de estado nas colunas; filtro de data abaixo.
+          </CardDescription>
         </div>
-        {isFetching ? (
-          <p className="text-xs text-muted-foreground sm:text-end">A atualizar…</p>
-        ) : null}
-      </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <FilterCalendarControl
+              dayFilter={dayFilter}
+              calendarOpen={calendarOpen}
+              onOpenChange={setCalendarOpen}
+              onSelectDay={(d) => {
+                setDayFilter(formatDateOnlyLocal(d));
+                setPage(1);
+                setCalendarOpen(false);
+              }}
+              onClear={() => {
+                setDayFilter(undefined);
+                setPage(1);
+              }}
+            />
+            <Button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="gap-2"
+            >
+              <PlusIcon className="size-4 shrink-0" />
+              Novo chamado
+            </Button>
+          </div>
+          {isFetching ? (
+            <p className="text-xs text-muted-foreground">A atualizar lista…</p>
+          ) : null}
+        </div>
+      </CardHeader>
 
-      <div className="mx-auto w-full max-w-4xl">
+      <CardContent className="p-0">
         <TicketsDataTable
           data={rows}
           sortBy={sortBy}
@@ -245,15 +284,19 @@ export function TicketsList() {
           onSort={handleSort}
           onStatusFilter={handleStatusFilter}
           onRowOpenTicket={setEditTicket}
+          embedded
         />
-      </div>
+      </CardContent>
 
       {meta && meta.totalPages > 0 ? (
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 border-t border-border/80 bg-muted/15 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <p className="text-center text-sm text-muted-foreground sm:text-start">
-            Página {meta.page} de {meta.totalPages} · {meta.total} tickets
+            Página {meta.page} de {meta.totalPages}
+            <span className="text-foreground/70"> · </span>
+            {meta.total}{" "}
+            {meta.total === 1 ? "registo" : "registos"} no total
           </p>
-          <Pagination className="mx-0 w-full justify-center sm:justify-end">
+          <Pagination className="mx-0 w-full justify-center sm:w-auto sm:justify-end">
             <PaginationContent className="flex-wrap justify-center">
               <PaginationItem>
                 <PaginationPrevious
@@ -299,7 +342,7 @@ export function TicketsList() {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        </div>
+        </CardFooter>
       ) : null}
 
       <TicketsListDialogs
@@ -311,7 +354,7 @@ export function TicketsList() {
         createOpen={createOpen}
         onCreateOpenChange={setCreateOpen}
       />
-    </div>
+    </Card>
   );
 }
 
@@ -365,9 +408,9 @@ function TicketsListDialogs({
       <Dialog open={createOpen} onOpenChange={onCreateOpenChange}>
         <DialogContent className="max-h-[min(90vh,44rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Novo ticket</DialogTitle>
+            <DialogTitle>Novo chamado</DialogTitle>
             <DialogDescription className="sr-only">
-              Cria um ticket com título, descrição e estado.
+              Cria um chamado com título, descrição e estado.
             </DialogDescription>
           </DialogHeader>
           {createOpen ? (
@@ -399,7 +442,7 @@ function FilterCalendarControl({
   const label =
     dayFilter !== undefined
       ? format(parseDateOnlyLocal(dayFilter), "d MMM yyyy", { locale: ptBR })
-      : "Filtrar por data";
+      : "Dia de criação";
 
   return (
     <div className="flex flex-wrap items-center gap-2">

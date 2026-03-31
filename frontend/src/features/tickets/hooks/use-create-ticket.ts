@@ -12,6 +12,7 @@ export function useCreateTicket() {
     mutationFn: (body: CreateTicketBody) => ACreateTicket(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ticketQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

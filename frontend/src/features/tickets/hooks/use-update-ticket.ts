@@ -34,6 +34,7 @@ export function useUpdateTicket(ticketId: string) {
         },
       );
       void queryClient.invalidateQueries({ queryKey: ticketQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

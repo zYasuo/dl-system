@@ -11,8 +11,15 @@ import {
 import { ErrorAlert } from "@/shared/components/error-alert";
 import { FormField } from "@/shared/components/form-field";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
 
 export type TicketCreateFormProps = {
   layout?: "page" | "plain";
@@ -38,12 +45,12 @@ export function TicketCreateForm({
 
   const handleSuccess = () => {
     if (onSuccess) onSuccess();
-    else void router.push("/tickets");
+    else void router.push("/dashboard/tickets");
   };
 
   const handleCancel = () => {
     if (onCancel) onCancel();
-    else void router.push("/tickets");
+    else void router.push("/dashboard/tickets");
   };
 
   const formBody = (
@@ -75,15 +82,20 @@ export function TicketCreateForm({
         required
         error={form.formState.errors.description?.message}
       >
-        <Input id="description" {...form.register("description")} />
+        <Textarea
+          id="description"
+          rows={5}
+          className="min-h-30 resize-y"
+          {...form.register("description")}
+        />
       </FormField>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "A guardar…" : "Criar"}
-        </Button>
+      <div className="flex flex-col-reverse gap-2 border-t border-border/80 pt-4 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={handleCancel}>
           Cancelar
+        </Button>
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "A criar…" : "Criar chamado"}
         </Button>
       </div>
     </form>
@@ -94,11 +106,17 @@ export function TicketCreateForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Novo ticket</CardTitle>
+    <Card
+      className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+      size="sm"
+    >
+      <CardHeader className="border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
+        <CardTitle className="text-base">Dados do chamado</CardTitle>
+        <CardDescription>
+          Campos obrigatórios marcados com asterisco.
+        </CardDescription>
       </CardHeader>
-      <CardContent>{formBody}</CardContent>
+      <CardContent className="px-4 py-5 sm:px-5">{formBody}</CardContent>
     </Card>
   );
 }

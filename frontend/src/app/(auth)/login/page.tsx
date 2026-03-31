@@ -32,7 +32,7 @@ function LoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
-  const next = searchParams.get("next") ?? "/tickets";
+  const next = searchParams.get("next") ?? "/dashboard";
 
   return (
     <AuthCard
@@ -65,7 +65,7 @@ function LoginForm() {
           try {
             await login(values.email, values.password);
             toast.success("Sessão iniciada.");
-            router.replace(next.startsWith("/") ? next : "/tickets");
+            router.replace(next.startsWith("/") ? next : "/dashboard");
           } catch (e) {
             setSubmitError(e);
           }

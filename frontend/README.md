@@ -34,7 +34,9 @@ npm install
 npm run dev
 ```
 
-Abre [http://localhost:3001](http://localhost:3001). Fluxos: `/tickets`, `/tickets/new`, `/tickets/[id]/edit`.
+Abre [http://localhost:3001](http://localhost:3001). Após login, o destino por defeito é **`/dashboard`** (painel com KPIs e gráficos). Rotas autenticadas: `/dashboard`, `/tickets`, `/tickets/new`, `/tickets/[id]/edit`.
+
+**Painel:** os totais por estado vêm de `GET /api/v1/tickets?status=…&limit=1` (campo `meta.total`). O gráfico temporal agrega no cliente os últimos tickets da mesma API (até 100 por página); para séries completas, convém um endpoint de métricas no backend (ver comentários `TODO` em `features/dashboard`).
 
 ## OpenAPI / tipos
 
@@ -55,6 +57,7 @@ Tipos gerados em `src/lib/api/v1.d.ts` a partir do snapshot em `openapi/openapi.
 
 ## Arquitetura (resumo)
 
+- **`src/features/dashboard`**: shell com sidebar (shadcn), `useDashboardStats`, página de visão geral com gráficos (Recharts via `Chart`).
 - **`src/features/tickets`**: hooks (`useTicketsList`, `useCreateTicket`, …), schemas Zod, componentes de ticket.
 - **`src/lib/api`**: cliente OpenAPI, funções de adaptação e `ApiError` alinhado ao envelope de erro do Nest (`success: false`, `message`, …).
 - **`src/shared`**: UI shadcn e componentes genéricos (`PageHeader`, `EmptyState`, `ErrorAlert`).

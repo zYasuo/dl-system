@@ -40,7 +40,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
         <Link
-          href="/tickets"
+          href="/dashboard"
           className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground hover:text-primary"
         >
           <Ticket className="size-5" aria-hidden />

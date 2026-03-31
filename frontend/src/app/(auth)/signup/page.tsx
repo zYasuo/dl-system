@@ -74,7 +74,7 @@ export default function SignupPage() {
             try {
               await login(values.email, values.password);
               toast.success("Conta criada. Bem-vindo(a)!");
-              router.replace("/tickets");
+              router.replace("/dashboard");
             } catch {
               toast.error(
                 "Conta criada, mas o início de sessão falhou. Entra manualmente.",

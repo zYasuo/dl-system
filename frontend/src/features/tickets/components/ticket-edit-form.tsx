@@ -1,7 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format, isValid } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LayoutDashboardIcon, ListIcon } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTicketDetail } from "@/features/tickets/hooks/use-ticket-detail";
@@ -11,16 +15,23 @@ import {
   type UpdateTicketFormValues,
 } from "@/features/tickets/schemas/ticket.schema";
 import type { TicketPublic } from "@/lib/api/tickets-api";
+import { ticketCode } from "@/features/tickets/lib/ticket-code";
 import { ErrorAlert } from "@/shared/components/error-alert";
 import { EmptyState } from "@/shared/components/empty-state";
 import { FormField } from "@/shared/components/form-field";
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { TicketStatusField } from "@/features/tickets/components/ticket-status-field";
 
 export type TicketEditFormProps = {
@@ -31,6 +42,93 @@ export type TicketEditFormProps = {
   onSuccess?: () => void;
   onCancel?: () => void;
 };
+
+function formatDateTimePt(iso: string): string {
+  const d = new Date(iso);
+  if (!isValid(d)) return "—";
+  return `${format(d, "d MMM yyyy", { locale: ptBR })} · ${format(d, "HH:mm", { locale: ptBR })}`;
+}
+
+function TicketEditSidePanel({ ticket }: { ticket: TicketPublic }) {
+  return (
+    <div className="flex flex-col gap-4 lg:max-w-none">
+      <Card
+        className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+        size="sm"
+      >
+        <CardHeader className="border-b border-border/80 bg-muted/20 px-4 py-3 sm:px-4">
+          <CardTitle className="text-sm font-medium">Informação do registo</CardTitle>
+          <CardDescription className="text-xs">
+            Dados fixos associados a este chamado.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 px-4 py-4">
+          <dl className="grid gap-3 text-sm">
+            <div className="grid gap-0.5">
+              <dt className="text-xs font-medium text-muted-foreground">Código</dt>
+              <dd className="font-mono text-xs tracking-tight text-foreground">
+                {ticketCode(ticket.id)}
+              </dd>
+            </div>
+          </dl>
+          <div className="space-y-3 border-t border-border/70 pt-3">
+            <dl className="grid gap-3 text-sm">
+              <div className="grid gap-0.5">
+                <dt className="text-xs font-medium text-muted-foreground">Criado</dt>
+                <dd className="tabular-nums text-foreground">
+                  {formatDateTimePt(ticket.createdAt)}
+                </dd>
+              </div>
+              <div className="grid gap-0.5">
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Última atualização
+                </dt>
+                <dd className="tabular-nums text-foreground">
+                  {formatDateTimePt(ticket.updatedAt)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            O guardar envia a data da última leitura para evitar sobrescrever alterações feitas
+            entretanto noutro sítio.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card
+        className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+        size="sm"
+      >
+        <CardHeader className="border-b border-border/80 bg-muted/20 px-4 py-3">
+          <CardTitle className="text-sm font-medium">Navegação</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-1 p-2">
+          <Link
+            href="/dashboard/tickets"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "justify-start gap-2 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <ListIcon className="size-4 shrink-0 opacity-70" aria-hidden />
+            Lista de chamados
+          </Link>
+          <Link
+            href="/dashboard"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "justify-start gap-2 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutDashboardIcon className="size-4 shrink-0 opacity-70" aria-hidden />
+            Visão geral
+          </Link>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export function TicketEditForm({
   ticketId,
@@ -80,19 +178,48 @@ export function TicketEditForm({
 
   const handleSuccess = () => {
     if (onSuccess) onSuccess();
-    else void router.push("/tickets");
+    else void router.push("/dashboard/tickets");
   };
 
   const handleCancel = () => {
     if (onCancel) onCancel();
-    else void router.push("/tickets");
+    else void router.push("/dashboard/tickets");
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-48 w-full" />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_19rem]">
+        <Card
+          className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+          size="sm"
+        >
+          <CardHeader className="space-y-2 border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-3.5 w-28" />
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 py-5 sm:px-5">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-10 w-full max-w-xs" />
+            <Skeleton className="h-10 w-40" />
+          </CardContent>
+        </Card>
+        <div className="flex flex-col gap-4">
+          <Card
+            className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+            size="sm"
+          >
+            <CardHeader className="border-b border-border/80 bg-muted/20 px-4 py-3">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="mt-2 h-3 w-full" />
+            </CardHeader>
+            <CardContent className="space-y-3 px-4 py-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+          </Card>
+          <Skeleton className="h-28 w-full rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -104,11 +231,11 @@ export function TicketEditForm({
   if (isNotFound) {
     return (
       <EmptyState
-        title="Ticket não encontrado"
-        description="Não foi possível localizar este ticket ao percorrer a listagem paginada. Confirma o ID ou cria um ticket novo."
+        title="Chamado não encontrado"
+        description="Este identificador não corresponde a nenhum chamado acessível. Verifica o link ou volta à lista."
       >
-        <Link href="/tickets" className={cn(buttonVariants())}>
-          Voltar à lista
+        <Link href="/dashboard/tickets" className={cn(buttonVariants())}>
+          Voltar aos chamados
         </Link>
       </EmptyState>
     );
@@ -143,7 +270,12 @@ export function TicketEditForm({
         required
         error={form.formState.errors.description?.message}
       >
-        <Input id="edit-description" {...form.register("description")} />
+        <Textarea
+          id="edit-description"
+          rows={7}
+          className="min-h-[10rem] resize-y"
+          {...form.register("description")}
+        />
       </FormField>
 
       <FormField
@@ -162,12 +294,12 @@ export function TicketEditForm({
 
       <input type="hidden" {...form.register("updatedAt")} />
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "A guardar…" : "Guardar"}
-        </Button>
+      <div className="flex flex-col-reverse gap-2 border-t border-border/80 pt-4 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={handleCancel}>
           Cancelar
+        </Button>
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "A guardar…" : "Guardar alterações"}
         </Button>
       </div>
     </form>
@@ -177,12 +309,31 @@ export function TicketEditForm({
     return formBody;
   }
 
+  if (!resolved) {
+    return null;
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Editar ticket</CardTitle>
-      </CardHeader>
-      <CardContent>{formBody}</CardContent>
-    </Card>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_19rem]">
+      <Card
+        className="gap-0 border-border/80 shadow-sm ring-1 ring-foreground/6"
+        size="sm"
+      >
+        <CardHeader className="border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
+          <CardTitle className="text-base">Formulário</CardTitle>
+          <CardDescription>
+            <span className="font-mono text-xs tracking-tight text-muted-foreground">
+              {ticketCode(ticketId)}
+            </span>
+            <span className="mt-1 block text-[13px] leading-snug">
+              Campos editáveis deste chamado.
+            </span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-4 py-5 sm:px-5">{formBody}</CardContent>
+      </Card>
+
+      <TicketEditSidePanel ticket={resolved} />
+    </div>
   );
 }
