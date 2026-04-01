@@ -3,7 +3,7 @@ import { Email } from '../vo/email.vo';
 import { Name } from '../vo/name.vo';
 import { Password } from '../vo/password.vo';
 
-export type TUserEntity = {
+export type UserEntityProps = {
   id: string;
   name: Name;
   email: Email;
@@ -12,14 +12,14 @@ export type TUserEntity = {
   updatedAt: Date;
 };
 
-export type TCreateUserEntityInput = Omit<TUserEntity, 'email' | 'name' | 'password'> & {
+export type CreateUserEntityInput = Omit<UserEntityProps, 'email' | 'name' | 'password'> & {
   name: string;
   password: string;
   email: string;
 };
 
 export class UserEntity {
-  constructor(private readonly params: TUserEntity) {}
+  constructor(private readonly params: UserEntityProps) {}
 
   get id(): string {
     return this.params.id;
@@ -45,7 +45,7 @@ export class UserEntity {
     return this.params.updatedAt;
   }
 
-  static create(input: TCreateUserEntityInput): UserEntity {
+  static create(input: CreateUserEntityInput): UserEntity {
     if (!input.id?.trim()) {
       throw new DomainError('Id is required');
     }

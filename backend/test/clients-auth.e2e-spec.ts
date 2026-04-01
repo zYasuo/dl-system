@@ -16,6 +16,7 @@ import { ClientController } from '../src/modules/clients/infrastructure/inbound/
 import { CreateClientUseCase } from '../src/modules/clients/application/use-cases/create-client.use-case';
 import { FindAllClientsUseCase } from '../src/modules/clients/application/use-cases/find-all-clients.use-case';
 import { FindClientByIdUseCase } from '../src/modules/clients/application/use-cases/find-client-by-id.use-case';
+import { SearchClientsUseCase } from '../src/modules/clients/application/use-cases/search-clients.use-case';
 
 class MemoryRateLimitStore {
   private readonly counts = new Map<string, number>();
@@ -41,6 +42,7 @@ describe('Clients require auth (e2e-style)', () => {
         { provide: CreateClientUseCase, useValue: { execute: jest.fn() } },
         { provide: FindAllClientsUseCase, useValue: { execute: jest.fn() } },
         { provide: FindClientByIdUseCase, useValue: { execute: jest.fn() } },
+        { provide: SearchClientsUseCase, useValue: { execute: jest.fn() } },
         { provide: APP_GUARD, useClass: RateLimitGuard },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
         {

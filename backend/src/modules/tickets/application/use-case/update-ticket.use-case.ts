@@ -13,7 +13,7 @@ import { Description } from '../../domain/vo/description.vo';
 import type { CachePort } from 'src/common/ports/cache/cache.ports';
 import { ticketUserListVersionKey } from '../cache/ticket-key-builder.cache';
 import { ticketCacheKey } from '../cache/ticket-cache.key';
-import type { TUpdateTicket } from '../dto/update-ticket.dto';
+import type { UpdateTicketBody } from '../dto/update-ticket.dto';
 
 @Injectable()
 export class UpdateTicketUseCase {
@@ -25,7 +25,7 @@ export class UpdateTicketUseCase {
   async execute(
     ticketId: string,
     userUuid: string,
-    input: TUpdateTicket,
+    input: UpdateTicketBody,
   ): Promise<TicketEntity> {
     const current = await this.ticketRepository.findById(ticketId);
     if (!current) {

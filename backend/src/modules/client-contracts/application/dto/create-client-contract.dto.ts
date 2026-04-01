@@ -22,6 +22,6 @@ export const SCreateClientContract = z
     path: ['address'],
   });
 
-export type TCreateClientContract = z.infer<typeof SCreateClientContract>;
+export type CreateClientContractBody = z.infer<typeof SCreateClientContract>;
 
 export class CreateClientContractBodyDto extends createZodDto(SCreateClientContract) {}

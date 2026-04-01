@@ -20,6 +20,6 @@ export const SFindAllTicket = z
     { message: 'createdFrom must be on or before createdTo', path: ['createdTo'] },
   );
 
-export type TFindAllTicket = z.infer<typeof SFindAllTicket>;
+export type FindAllTicketsQuery = z.infer<typeof SFindAllTicket>;
 
 export class FindAllTicketsQueryDto extends createZodDto(SFindAllTicket) {}

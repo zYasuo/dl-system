@@ -22,7 +22,7 @@ import {
   NotificationChannel,
   NotificationStatus,
 } from 'src/modules/notifications/domain/entities/notification.entity';
-import type { TCreateTicket } from '../dto/create-ticket.dto';
+import type { CreateTicketBody } from '../dto/create-ticket.dto';
 
 @Injectable()
 export class CreateTicketUseCase {
@@ -38,7 +38,7 @@ export class CreateTicketUseCase {
     @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
   ) {}
 
-  async execute(input: TCreateTicket, userUuid: string): Promise<TicketEntity> {
+  async execute(input: CreateTicketBody, userUuid: string): Promise<TicketEntity> {
     const user = await this.userRepository.findByUuid(userUuid);
     if (!user) {
       throw new NotFoundException('User not found');

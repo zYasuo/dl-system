@@ -3,7 +3,7 @@ import { Address } from 'src/common/vo/address.vo';
 import { Cnpj } from '../vo/cnpj.vo';
 import { Cpf } from '../vo/cpf.vo';
 
-export type TClientEntity = {
+export type ClientEntityProps = {
   id: string;
   name: string;
   cpf?: Cpf;
@@ -14,7 +14,7 @@ export type TClientEntity = {
 };
 
 export class ClientEntity {
-  constructor(private readonly params: TClientEntity) {}
+  constructor(private readonly params: ClientEntityProps) {}
 
   get id(): string {
     return this.params.id;
@@ -44,7 +44,7 @@ export class ClientEntity {
     return this.params.updatedAt;
   }
 
-  static create(input: TClientEntity): ClientEntity {
+  static create(input: ClientEntityProps): ClientEntity {
     if (!input.cpf && !input.cnpj) {
       throw new DomainError('Client must have at least CPF or CNPJ');
     }

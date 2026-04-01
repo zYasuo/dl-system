@@ -23,6 +23,6 @@ export const SCreateClient = z
     path: ['cpf'],
   });
 
-export type TCreateClient = z.infer<typeof SCreateClient>;
+export type CreateClientBody = z.infer<typeof SCreateClient>;
 
 export class CreateClientBodyDto extends createZodDto(SCreateClient) {}

@@ -1,3 +1,4 @@
+import type { ClientSearchItem } from 'src/modules/clients/application/use-cases/search-clients.use-case';
 import { ClientEntity } from 'src/modules/clients/domain/entities/client.entity';
 
 export type ClientAddressPublicHttp = {
@@ -19,6 +20,23 @@ export type ClientPublicHttp = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type ClientSearchMatchHttp = {
+  kind: 'cpf' | 'id' | 'address';
+  confidence: 'exact' | 'partial';
+};
+
+export type ClientSearchRowHttp = {
+  client: ClientPublicHttp;
+  match: ClientSearchMatchHttp;
+};
+
+export function toClientSearchRowHttp(row: ClientSearchItem): ClientSearchRowHttp {
+  return {
+    client: toClientPublicHttp(row.client),
+    match: row.match,
+  };
+}
 
 export function toClientPublicHttp(client: ClientEntity): ClientPublicHttp {
   const a = client.address;

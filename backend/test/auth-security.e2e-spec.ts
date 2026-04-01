@@ -10,7 +10,7 @@ import { RateLimitRedisStore } from '../src/common/rate-limit/rate-limit-redis.s
 import { HttpExceptionFilter } from '../src/common/http/http-exception.filter';
 import { TransformResponseInterceptor } from '../src/common/http/transform-response.interceptor';
 import { rateLimitConfig } from '../src/config/rate-limit.config';
-import { authConfig } from '../src/config/auth.config';
+import { authConfig } from '../src/modules/auth/config/auth.config';
 import { AuthController } from '../src/modules/auth/infrastructure/inbound/http/controllers/auth.controller';
 import { LoginUseCase } from '../src/modules/auth/application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../src/modules/auth/application/use-cases/refresh-token.use-case';
@@ -104,8 +104,6 @@ describe('Auth HTTP (e2e-style)', () => {
       .send({ email: 'anyone@example.com' })
       .expect(200);
 
-    expect(res.body.data.message).toBe(
-      'If this email is registered, a recovery link will be sent',
-    );
+    expect(res.body.data.message).toBe('If this email is registered, a recovery link will be sent');
   });
 });

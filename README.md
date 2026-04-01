@@ -1,6 +1,6 @@
-# DL Tickets
+# DL System
 
-A **ticketing** system with authentication (JWT access token + **httpOnly** refresh cookie), user management, and ticket operations with concurrency control. The backend uses **BullMQ** for asynchronous notifications (so HTTP responses are not blocked), **Redis** for caching and rate limiting, and a **ports-and-adapters** architecture (domain and use cases decoupled from infrastructure).
+**DL System** is the foundation for a future **ERP-style** product. Today the monorepo ships a NestJS API and a Next.js app with **authentication** (JWT access token + **httpOnly** refresh cookie), **users**, **tickets** (with concurrency control), **clients**, and **client contracts**. The backend uses **BullMQ** for asynchronous notifications (so HTTP responses are not blocked), **Redis** for caching and rate limiting, and a **ports-and-adapters** architecture (domain and use cases decoupled from infrastructure).
 
 This repository is a **monorepo** with a separate NestJS API and Next.js app; each folder has its own `package.json`.
 
@@ -44,7 +44,11 @@ npx prisma migrate dev
 npm run start:dev
 ```
 
-The API defaults to **http://localhost:3000** with the **`/api/v1`** prefix (e.g. `POST /api/v1/auth/login`, `GET /api/v1/tickets` with `Authorization: Bearer …`).
+The API defaults to **http://localhost:3000** with the **`/api/v1`** prefix. Examples:
+
+- `POST /api/v1/auth/login`
+- `GET /api/v1/tickets` with `Authorization: Bearer …`
+- `GET /api/v1/clients` and `GET /api/v1/client-contracts` (also require a Bearer token)
 
 Interactive OpenAPI docs (when enabled): `/docs`.
 
@@ -59,7 +63,7 @@ npm install
 npm run dev
 ```
 
-The app runs on **http://localhost:3001** so it does not clash with Nest on 3000. After sign-in, the default route is **`/dashboard`** (KPIs and charts). Ticket flows: `/tickets`, `/tickets/new`, `/tickets/[id]/edit`.
+The app runs on **http://localhost:3001** so it does not clash with Nest on 3000. After sign-in, the default route is **`/dashboard`** (KPIs and charts). Ticket flows: `/tickets`, `/tickets/new`, `/tickets/[id]/edit`. The UI today focuses on **dashboard and tickets**; additional API modules can be wired in the app as needed.
 
 - **`BACKEND_INTERNAL_URL`** — target for rewrites in `next.config.ts` (`/api/v1/*` → Nest), avoids browser CORS issues.
 - **`NEXT_PUBLIC_API_BASE_PATH`** — should be `/api/v1` to match the proxy.
@@ -82,7 +86,7 @@ flowchart LR
 
 ## Further reading
 
-- **Authentication, tickets, UUIDs, rate limits** — [backend/README.md](backend/README.md) (*Authentication*, *Identifiers*, *Getting started*).
+- **Authentication, HTTP routes, UUIDs, rate limits** — [backend/README.md](backend/README.md) (*Authentication*, *Rotas HTTP*, *Identifiers*, *Getting started*).
 - **OpenAPI / generated types** (`openapi:pull`, `openapi:generate`) — [frontend/README.md](frontend/README.md).
 - **Load testing (k6)** — [backend/README.md](backend/README.md) (*Load testing*).
 

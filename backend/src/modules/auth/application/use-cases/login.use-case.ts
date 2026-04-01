@@ -1,24 +1,21 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  REFRESH_TOKEN_REPOSITORY,
-  TOKEN_PROVIDER,
-} from '../../di.tokens';
+import { REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from '../../di.tokens';
 import { PASSWORD_HASHER, USER_REPOSITORY } from 'src/modules/users/di.tokens';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
 import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
-import type { TLogin } from '../dto/login.dto';
+import type { LoginBody } from '../dto/login.dto';
 import { randomUUID } from 'node:crypto';
-import type { IAuthConfig } from 'src/config/auth.config';
+import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
 
 const DUMMY_HASH =
   '$argon2id$v=19$m=19456,t=2,p=4$JMdI74dxqkC6ES1zzlG+rQ$O2PXX5Ze/TEmBGUuBZn5rpPghLhuoDNZXurwGg+CtGU';
 const INVALID_CREDENTIALS_MSG = 'Invalid email or password';
 
-export type TLoginResult = {
+export type LoginResult = {
   accessToken: string;
   refreshToken: string;
 };
@@ -34,7 +31,7 @@ export class LoginUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  async execute(input: TLogin): Promise<TLoginResult> {
+  async execute(input: LoginBody): Promise<LoginResult> {
     const user = await this.userRepository.findByEmail(input.email);
 
     if (!user) {
@@ -42,10 +39,7 @@ export class LoginUseCase {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
     }
 
-    const passwordValid = await this.passwordHasher.compare(
-      input.password,
-      user.password.value,
-    );
+    const passwordValid = await this.passwordHasher.compare(input.password, user.password.value);
 
     if (!passwordValid) {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
@@ -62,9 +56,7 @@ export class LoginUseCase {
     const tokenHash = this.tokenProvider.hashToken(rawRefreshToken);
     const familyId = randomUUID();
     const authConfig = this.configService.get<IAuthConfig>('auth')!;
-    const expiresAt = new Date(
-      Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000,
-    );
+    const expiresAt = new Date(Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000);
 
     await this.refreshTokenRepository.create(
       RefreshTokenEntity.create({

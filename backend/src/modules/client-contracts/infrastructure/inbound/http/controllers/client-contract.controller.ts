@@ -13,7 +13,7 @@ import { RateLimitEndpoint } from 'src/common/rate-limit/rate-limit-endpoint.dec
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
 import {
   CurrentUser,
-  type TAuthUser,
+  type AuthUser,
 } from 'src/modules/auth/infrastructure/inbound/http/decorators/current-user.decorator';
 import { CreateClientContractUseCase } from 'src/modules/client-contracts/application/use-cases/create-client-contract.use-case';
 import { FindAllClientContractsUseCase } from 'src/modules/client-contracts/application/use-cases/find-all-client-contracts.use-case';
@@ -21,15 +21,15 @@ import { FindClientContractByIdUseCase } from 'src/modules/client-contracts/appl
 import { UpdateClientContractUseCase } from 'src/modules/client-contracts/application/use-cases/update-client-contract.use-case';
 import {
   SCreateClientContract,
-  type TCreateClientContract,
+  type CreateClientContractBody,
 } from 'src/modules/client-contracts/application/dto/create-client-contract.dto';
 import {
   SFindAllClientContracts,
-  type TFindAllClientContracts,
+  type FindAllClientContractsQuery,
 } from 'src/modules/client-contracts/application/dto/find-all-client-contracts.dto';
 import {
   SUpdateClientContract,
-  type TUpdateClientContract,
+  type UpdateClientContractBody,
 } from 'src/modules/client-contracts/application/dto/update-client-contract.dto';
 import {
   ApiClientContracts,
@@ -40,7 +40,6 @@ import {
   type ClientContractPublicHttp,
 } from '../mappers/client-contract-http.mapper';
 
-/** All routes require a valid JWT (global JwtAuthGuard on the app). */
 @Controller('client-contracts')
 @ApiClientContracts()
 export class ClientContractController {
@@ -54,8 +53,8 @@ export class ClientContractController {
   @RateLimitEndpoint('client-contracts-list')
   @ClientContractDoc.List()
   async findAll(
-    @Query(new ZodValidationPipe(SFindAllClientContracts)) query: TFindAllClientContracts,
-    @CurrentUser() _user: TAuthUser,
+    @Query(new ZodValidationPipe(SFindAllClientContracts)) query: FindAllClientContractsQuery,
+    @CurrentUser() _user: AuthUser,
   ): Promise<PaginatedResult<ClientContractPublicHttp>> {
     const result = await this.findAllClientContractsUseCase.execute(query);
     return {
@@ -68,7 +67,7 @@ export class ClientContractController {
   @ClientContractDoc.FindById()
   async findById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser() _user: TAuthUser,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ClientContractPublicHttp> {
     const row = await this.findClientContractByIdUseCase.execute(id);
     return toClientContractPublicHttp(row);
@@ -77,8 +76,8 @@ export class ClientContractController {
   @RateLimitEndpoint('client-contracts-create')
   @ClientContractDoc.Create()
   async create(
-    @Body(new ZodValidationPipe(SCreateClientContract)) dto: TCreateClientContract,
-    @CurrentUser() _user: TAuthUser,
+    @Body(new ZodValidationPipe(SCreateClientContract)) dto: CreateClientContractBody,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ClientContractPublicHttp> {
     const row = await this.createClientContractUseCase.execute(dto);
     return toClientContractPublicHttp(row);
@@ -88,8 +87,8 @@ export class ClientContractController {
   @ClientContractDoc.Update()
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body(new ZodValidationPipe(SUpdateClientContract)) dto: TUpdateClientContract,
-    @CurrentUser() _user: TAuthUser,
+    @Body(new ZodValidationPipe(SUpdateClientContract)) dto: UpdateClientContractBody,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ClientContractPublicHttp> {
     const row = await this.updateClientContractUseCase.execute(id, dto);
     return toClientContractPublicHttp(row);

@@ -7,7 +7,7 @@ export enum ClientContractStatus {
   CANCELLED = 'CANCELLED',
 }
 
-export type TClientContractEntity = {
+export type ClientContractEntityProps = {
   id: string;
   contractNumber: string;
   clientId: string;
@@ -21,7 +21,7 @@ export type TClientContractEntity = {
 };
 
 export class ClientContractEntity {
-  private constructor(private readonly params: TClientContractEntity) {}
+  private constructor(private readonly params: ClientContractEntityProps) {}
 
   get id(): string {
     return this.params.id;
@@ -72,7 +72,7 @@ export class ClientContractEntity {
     }
   }
 
-  static create(input: TClientContractEntity): ClientContractEntity {
+  static create(input: ClientContractEntityProps): ClientContractEntity {
     if (!input.id?.trim()) {
       throw new DomainError('Id is required');
     }
@@ -87,7 +87,7 @@ export class ClientContractEntity {
     return entity;
   }
 
-  static restore(params: TClientContractEntity): ClientContractEntity {
+  static restore(params: ClientContractEntityProps): ClientContractEntity {
     return new ClientContractEntity(params);
   }
 
@@ -95,7 +95,7 @@ export class ClientContractEntity {
     this.assertInvariants();
   }
 
-  toParams(): TClientContractEntity {
+  toParams(): ClientContractEntityProps {
     return { ...this.params };
   }
 
@@ -108,7 +108,7 @@ export class ClientContractEntity {
     status?: ClientContractStatus;
     updatedAt?: Date;
   }): ClientContractEntity {
-    const next: TClientContractEntity = {
+    const next: ClientContractEntityProps = {
       ...this.params,
       ...(patch.contractNumber !== undefined ? { contractNumber: patch.contractNumber } : {}),
       ...(patch.useClientAddress !== undefined

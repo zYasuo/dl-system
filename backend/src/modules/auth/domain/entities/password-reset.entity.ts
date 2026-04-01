@@ -1,4 +1,4 @@
-export type TPasswordResetEntity = {
+export type PasswordResetEntityProps = {
   id: number;
   tokenHash: string;
   userId: number;
@@ -8,7 +8,7 @@ export type TPasswordResetEntity = {
 };
 
 export class PasswordResetEntity {
-  constructor(private readonly params: TPasswordResetEntity) {}
+  constructor(private readonly params: PasswordResetEntityProps) {}
 
   get id(): number {
     return this.params.id;
@@ -42,7 +42,7 @@ export class PasswordResetEntity {
     return this.usedAt !== null;
   }
 
-  static create(input: TPasswordResetEntity): PasswordResetEntity {
+  static create(input: PasswordResetEntityProps): PasswordResetEntity {
     return new PasswordResetEntity(input);
   }
 }

@@ -4,7 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 import { RateLimitModule } from '../common/rate-limit/rate-limit.module';
 import { rateLimitConfig } from '../config/rate-limit.config';
-import { authConfig } from '../config/auth.config';
+import { authConfig } from './auth/config/auth.config';
 import { UsersModule } from './users/users.module';
 import { TicketsModule } from './tickets/ticket.module';
 import { ClientsModule } from './clients/clients.module';

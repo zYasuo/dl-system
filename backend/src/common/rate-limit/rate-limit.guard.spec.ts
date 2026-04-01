@@ -2,7 +2,7 @@ import { ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { IRateLimitConfig } from '../../config/rate-limit.config';
+import type { RateLimitConfig } from '../../config/rate-limit.config';
 import { RateLimitGuard } from './rate-limit.guard';
 import type { RateLimitRedisStore } from './rate-limit-redis.store';
 
@@ -25,7 +25,7 @@ function httpContext(req: Partial<Request>): ExecutionContext {
 }
 
 describe('RateLimitGuard', () => {
-  const rateLimits: IRateLimitConfig = {
+  const rateLimits: RateLimitConfig = {
     'users-register': { max: 2, windowSeconds: 60 },
     'tickets-list': { max: 10, windowSeconds: 60 },
     'tickets-create': { max: 10, windowSeconds: 60 },

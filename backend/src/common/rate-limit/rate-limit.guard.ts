@@ -11,8 +11,8 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { RATE_LIMIT_STORE, type RateLimitStore } from './di.tokens';
 import type {
-  IRateLimitConfig,
-  TRateLimitEndpointKey,
+  RateLimitConfig,
+  RateLimitEndpointKey,
 } from '../../config/rate-limit.config';
 import { RATE_LIMIT_ENDPOINT_KEY } from './rate-limit-endpoint.decorator';
 
@@ -30,7 +30,7 @@ export class RateLimitGuard implements CanActivate {
       return true;
     }
 
-    const endpoint = this.reflector.getAllAndOverride<TRateLimitEndpointKey | undefined>(
+    const endpoint = this.reflector.getAllAndOverride<RateLimitEndpointKey | undefined>(
       RATE_LIMIT_ENDPOINT_KEY,
       [context.getHandler(), context.getClass()],
     );
@@ -39,7 +39,7 @@ export class RateLimitGuard implements CanActivate {
       return true;
     }
 
-    const rateLimits = this.configService.getOrThrow<IRateLimitConfig>('rateLimit');
+    const rateLimits = this.configService.getOrThrow<RateLimitConfig>('rateLimit');
     const entry = rateLimits[endpoint];
 
     const req = context.switchToHttp().getRequest<Request>();

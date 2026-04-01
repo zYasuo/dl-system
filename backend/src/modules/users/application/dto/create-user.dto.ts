@@ -16,6 +16,6 @@ export const SCreateUser = z.object({
     .max(Password.MAX_LENGTH, 'Password must be less than 255 characters'),
 });
 
-export type TCreateUser = z.infer<typeof SCreateUser>;
+export type CreateUserBody = z.infer<typeof SCreateUser>;
 
 export class CreateUserBodyDto extends createZodDto(SCreateUser) {}

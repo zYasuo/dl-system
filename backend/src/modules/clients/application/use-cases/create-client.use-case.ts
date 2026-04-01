@@ -7,20 +7,22 @@ import {
 import { randomUUID } from 'node:crypto';
 import { DomainError } from 'src/common/errors/domain.error';
 import { Address } from 'src/common/vo/address.vo';
+import { ClientCacheKeyBuilder } from '../cache/client-cache-key-builder';
 import { CLIENT_REPOSITORY } from '../../di.tokens';
 import type { ClientRepositoryPort } from '../../domain/ports/repository/client.repository.port';
 import { ClientEntity } from '../../domain/entities/client.entity';
 import { Cnpj } from '../../domain/vo/cnpj.vo';
 import { Cpf } from '../../domain/vo/cpf.vo';
-import type { TCreateClient } from '../dto/create-client.dto';
+import type { CreateClientBody } from '../dto/create-client.dto';
 
 @Injectable()
 export class CreateClientUseCase {
   constructor(
     @Inject(CLIENT_REPOSITORY) private readonly clientRepository: ClientRepositoryPort,
+    private readonly clientCacheKeyBuilder: ClientCacheKeyBuilder,
   ) {}
 
-  async execute(input: TCreateClient): Promise<ClientEntity> {
+  async execute(input: CreateClientBody): Promise<ClientEntity> {
     const cpf = input.cpf?.trim() ? Cpf.create(input.cpf) : undefined;
     const cnpj = input.cnpj?.trim() ? Cnpj.create(input.cnpj) : undefined;
 
@@ -57,7 +59,10 @@ export class CreateClientUseCase {
     }
 
     try {
-      return await this.clientRepository.create(entity);
+      const created = await this.clientRepository.create(entity);
+      await this.clientCacheKeyBuilder.bumpDetailVersion(created.id);
+      await this.clientCacheKeyBuilder.bumpListVersion();
+      return created;
     } catch (e: unknown) {
       if (
         e &&

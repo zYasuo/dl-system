@@ -5,10 +5,10 @@ import { TicketEntity, TicketStatus } from '../../domain/entities/ticket.entity'
 import { TicketRepositoryPort } from '../../domain/ports/repository/ticket.repository.port';
 import { encodeTicketListPage } from '../mappers/ticket-cache.codec';
 import { TicketCacheKeyBuilder } from '../cache/ticket-key-builder.cache';
-import type { TFindAllTicket } from '../dto/find-all-ticket.dto';
+import type { FindAllTicketsQuery } from '../dto/find-all-ticket.dto';
 import { FindAllTicketsUseCase } from './find-all-tickets.use-case';
 
-const listQuery = (overrides: Partial<TFindAllTicket> = {}): TFindAllTicket => ({
+const listQuery = (overrides: Partial<FindAllTicketsQuery> = {}): FindAllTicketsQuery => ({
   page: 1,
   limit: 10,
   sortBy: 'createdAt',

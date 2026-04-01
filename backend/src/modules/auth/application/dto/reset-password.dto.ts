@@ -10,6 +10,6 @@ export const SResetPassword = z.object({
     .max(Password.MAX_LENGTH, `Password must be at most ${Password.MAX_LENGTH} characters`),
 });
 
-export type TResetPassword = z.infer<typeof SResetPassword>;
+export type ResetPasswordBody = z.infer<typeof SResetPassword>;
 
 export class ResetPasswordBodyDto extends createZodDto(SResetPassword) {}

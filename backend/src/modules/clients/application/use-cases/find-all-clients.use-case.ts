@@ -4,7 +4,7 @@ import { CLIENT_REPOSITORY } from '../../di.tokens';
 import type { ClientRepositoryPort } from '../../domain/ports/repository/client.repository.port';
 import type { ClientListCriteria } from '../../domain/criteria/client-list.criteria';
 import { ClientEntity } from '../../domain/entities/client.entity';
-import type { TFindAllClients } from '../dto/find-all-clients.dto';
+import type { FindAllClientsQuery } from '../dto/find-all-clients.dto';
 
 @Injectable()
 export class FindAllClientsUseCase {
@@ -12,7 +12,7 @@ export class FindAllClientsUseCase {
     @Inject(CLIENT_REPOSITORY) private readonly clientRepository: ClientRepositoryPort,
   ) {}
 
-  async execute(query: TFindAllClients): Promise<PaginatedResult<ClientEntity>> {
+  async execute(query: FindAllClientsQuery): Promise<PaginatedResult<ClientEntity>> {
     const criteria: ClientListCriteria = {
       page: query.page,
       limit: query.limit,

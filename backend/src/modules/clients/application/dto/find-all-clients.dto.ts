@@ -10,6 +10,6 @@ export const SFindAllClients = z.object({
   name: z.string().min(1).optional(),
 });
 
-export type TFindAllClients = z.infer<typeof SFindAllClients>;
+export type FindAllClientsQuery = z.infer<typeof SFindAllClients>;
 
 export class FindAllClientsQueryDto extends createZodDto(SFindAllClients) {}

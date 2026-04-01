@@ -8,21 +8,21 @@ import { UpdateTicketUseCase } from 'src/modules/tickets/application/use-case/up
 import { FindTicketByIdUseCase } from 'src/modules/tickets/application/use-case/find-ticket-by-id.use-case';
 import {
   SCreateTicket,
-  type TCreateTicket,
+  type CreateTicketBody,
 } from 'src/modules/tickets/application/dto/create-ticket.dto';
 import {
   SFindAllTicket,
-  type TFindAllTicket,
+  type FindAllTicketsQuery,
 } from 'src/modules/tickets/application/dto/find-all-ticket.dto';
 import {
   SUpdateTicket,
-  type TUpdateTicket,
+  type UpdateTicketBody,
 } from 'src/modules/tickets/application/dto/update-ticket.dto';
 import { ApiTickets, TicketDoc } from '../docs/ticket-doc.decorator';
-import { toTicketPublicHttp, type TTicketPublicHttp } from '../mappers/ticket-http.mapper';
+import { toTicketPublicHttp, type TicketPublicHttp } from '../mappers/ticket-http.mapper';
 import {
   CurrentUser,
-  type TAuthUser,
+  type AuthUser,
 } from 'src/modules/auth/infrastructure/inbound/http/decorators/current-user.decorator';
 
 @Controller('tickets')
@@ -38,9 +38,9 @@ export class TicketController {
   @RateLimitEndpoint('tickets-list')
   @TicketDoc.List()
   async findAll(
-    @Query(new ZodValidationPipe(SFindAllTicket)) query: TFindAllTicket,
-    @CurrentUser() user: TAuthUser,
-  ): Promise<PaginatedResult<TTicketPublicHttp>> {
+    @Query(new ZodValidationPipe(SFindAllTicket)) query: FindAllTicketsQuery,
+    @CurrentUser() user: AuthUser,
+  ): Promise<PaginatedResult<TicketPublicHttp>> {
     const result = await this.findAllTicketsUseCase.execute(query, user.sub);
 
     return {
@@ -53,8 +53,8 @@ export class TicketController {
   @TicketDoc.FindById()
   async findById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser() user: TAuthUser,
-  ): Promise<TTicketPublicHttp> {
+    @CurrentUser() user: AuthUser,
+  ): Promise<TicketPublicHttp> {
     const ticket = await this.findTicketByIdUseCase.execute(id, user.sub);
     return toTicketPublicHttp(ticket);
   }
@@ -62,9 +62,9 @@ export class TicketController {
   @RateLimitEndpoint('tickets-create')
   @TicketDoc.Create()
   async create(
-    @Body(new ZodValidationPipe(SCreateTicket)) dto: TCreateTicket,
-    @CurrentUser() user: TAuthUser,
-  ): Promise<TTicketPublicHttp> {
+    @Body(new ZodValidationPipe(SCreateTicket)) dto: CreateTicketBody,
+    @CurrentUser() user: AuthUser,
+  ): Promise<TicketPublicHttp> {
     const ticket = await this.createTicketUseCase.execute(dto, user.sub);
     return toTicketPublicHttp(ticket);
   }
@@ -73,9 +73,9 @@ export class TicketController {
   @TicketDoc.Update()
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body(new ZodValidationPipe(SUpdateTicket)) dto: TUpdateTicket,
-    @CurrentUser() user: TAuthUser,
-  ): Promise<TTicketPublicHttp> {
+    @Body(new ZodValidationPipe(SUpdateTicket)) dto: UpdateTicketBody,
+    @CurrentUser() user: AuthUser,
+  ): Promise<TicketPublicHttp> {
     const ticket = await this.updateTicketUseCase.execute(id, user.sub, dto);
     return toTicketPublicHttp(ticket);
   }

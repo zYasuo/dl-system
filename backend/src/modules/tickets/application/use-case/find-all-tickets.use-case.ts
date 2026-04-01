@@ -8,7 +8,7 @@ import { TicketEntity } from '../../domain/entities/ticket.entity';
 import type { TicketListCriteria } from '../../domain/criteria/ticket-list.criteria';
 import type { TicketRepositoryPort } from '../../domain/ports/repository/ticket.repository.port';
 import { TicketCacheKeyBuilder } from '../cache/ticket-key-builder.cache';
-import type { TFindAllTicket } from '../dto/find-all-ticket.dto';
+import type { FindAllTicketsQuery } from '../dto/find-all-ticket.dto';
 import {
   encodeTicketListPage,
   tryDecodeTicketListCache,
@@ -25,7 +25,7 @@ export class FindAllTicketsUseCase {
   ) {}
 
   async execute(
-    input: TFindAllTicket,
+    input: FindAllTicketsQuery,
     userUuid: string,
   ): Promise<PaginatedResult<TicketEntity>> {
     const criteria = this.toCriteria(input, userUuid);
@@ -78,7 +78,7 @@ export class FindAllTicketsUseCase {
     return result;
   }
 
-  private toCriteria(input: TFindAllTicket, userUuid: string): TicketListCriteria {
+  private toCriteria(input: FindAllTicketsQuery, userUuid: string): TicketListCriteria {
     return {
       page: input.page,
       limit: input.limit,

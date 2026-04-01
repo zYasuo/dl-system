@@ -1,4 +1,4 @@
-import { TCreateUser } from '../dto/create-user.dto';
+import { CreateUserBody } from '../dto/create-user.dto';
 import { UserEntity } from '../../domain/entities/user.entity';
 import {
   ConflictException,
@@ -20,7 +20,7 @@ export class CreateUserUseCase {
     private readonly passwordHasher: PasswordHasherPort,
   ) {}
 
-  async execute(input: TCreateUser): Promise<UserEntity> {
+  async execute(input: CreateUserBody): Promise<UserEntity> {
     const { name, email, password } = input;
     const now = new Date();
 

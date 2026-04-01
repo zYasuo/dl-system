@@ -10,7 +10,7 @@ import type { Request } from 'express';
 import type { TokenProviderPort } from 'src/modules/auth/domain/ports/security/token-provider.port';
 import { TOKEN_PROVIDER } from '../../../../di.tokens';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import type { TAuthUser } from '../decorators/current-user.decorator';
+import type { AuthUser } from '../decorators/current-user.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -42,7 +42,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.tokenProvider.verifyAccessToken(token);
-      (request as Request & { user: TAuthUser }).user = {
+      (request as Request & { user: AuthUser }).user = {
         sub: payload.sub,
         email: payload.email,
       };

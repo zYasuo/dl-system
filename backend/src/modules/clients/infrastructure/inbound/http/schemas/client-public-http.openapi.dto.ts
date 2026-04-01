@@ -98,3 +98,38 @@ export class ClientSingleEnvelopeOpenApiDto {
   @ApiProperty({ type: ClientPublicHttpOpenApiDto })
   data!: ClientPublicHttpOpenApiDto;
 }
+
+export class ClientSearchMatchOpenApiDto {
+  @ApiProperty({ enum: ['cpf', 'id', 'address'] })
+  kind!: 'cpf' | 'id' | 'address';
+
+  @ApiProperty({ enum: ['exact', 'partial'] })
+  confidence!: 'exact' | 'partial';
+}
+
+export class ClientSearchRowOpenApiDto {
+  @ApiProperty({ type: ClientPublicHttpOpenApiDto })
+  client!: ClientPublicHttpOpenApiDto;
+
+  @ApiProperty({ type: ClientSearchMatchOpenApiDto })
+  match!: ClientSearchMatchOpenApiDto;
+}
+
+export class ClientSearchListInnerOpenApiDto {
+  @ApiProperty({ type: [ClientSearchRowOpenApiDto] })
+  data!: ClientSearchRowOpenApiDto[];
+
+  @ApiProperty({ type: PaginationMetaOpenApiDto })
+  meta!: PaginationMetaOpenApiDto;
+}
+
+export class ClientSearchListEnvelopeOpenApiDto {
+  @ApiProperty({ example: true })
+  success!: true;
+
+  @ApiProperty()
+  timestamp!: string;
+
+  @ApiProperty({ type: ClientSearchListInnerOpenApiDto })
+  data!: ClientSearchListInnerOpenApiDto;
+}

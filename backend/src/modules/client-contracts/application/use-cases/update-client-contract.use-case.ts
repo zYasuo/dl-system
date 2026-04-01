@@ -12,7 +12,7 @@ import {
   ClientContractEntity,
   ClientContractStatus,
 } from '../../domain/entities/client-contract.entity';
-import type { TUpdateClientContract } from '../dto/update-client-contract.dto';
+import type { UpdateClientContractBody } from '../dto/update-client-contract.dto';
 
 function atStartOfUtcDay(yyyyMmDd: string): Date {
   return new Date(`${yyyyMmDd}T00:00:00.000Z`);
@@ -25,7 +25,7 @@ export class UpdateClientContractUseCase {
     private readonly contractRepository: ClientContractRepositoryPort,
   ) {}
 
-  async execute(id: string, input: TUpdateClientContract): Promise<ClientContractEntity> {
+  async execute(id: string, input: UpdateClientContractBody): Promise<ClientContractEntity> {
     const current = await this.contractRepository.findById(id);
     if (!current) {
       throw new NotFoundException('Contract not found');

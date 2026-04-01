@@ -1,6 +1,6 @@
 import { TicketEntity, TicketStatus } from 'src/modules/tickets/domain/entities/ticket.entity';
 
-export type TTicketPublicHttp = {
+export type TicketPublicHttp = {
   id: string;
   title: string;
   description: string;
@@ -9,7 +9,7 @@ export type TTicketPublicHttp = {
   updatedAt: string;
 };
 
-export function toTicketPublicHttp(ticket: TicketEntity): TTicketPublicHttp {
+export function toTicketPublicHttp(ticket: TicketEntity): TicketPublicHttp {
   const { id, title, description, status, createdAt, updatedAt } = ticket;
 
   return {

@@ -10,7 +10,7 @@ import type { UserRepositoryPort } from 'src/modules/users/domain/ports/reposito
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { PasswordResetRepositoryPort } from '../../domain/ports/repository/password-reset.repository.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
-import type { TResetPassword } from '../dto/reset-password.dto';
+import type { ResetPasswordBody } from '../dto/reset-password.dto';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -24,7 +24,7 @@ export class ResetPasswordUseCase {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasherPort,
   ) {}
 
-  async execute(input: TResetPassword): Promise<void> {
+  async execute(input: ResetPasswordBody): Promise<void> {
     const tokenHash = this.tokenProvider.hashToken(input.token);
     const reset = await this.passwordResetRepository.findByTokenHash(tokenHash);
 

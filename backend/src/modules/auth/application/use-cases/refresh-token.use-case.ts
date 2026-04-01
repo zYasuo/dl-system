@@ -6,9 +6,9 @@ import type { TokenProviderPort } from '../../domain/ports/security/token-provid
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
 import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
-import type { IAuthConfig } from 'src/config/auth.config';
+import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
 
-export type TRefreshResult = {
+export type RefreshResult = {
   accessToken: string;
   refreshToken: string;
 };
@@ -23,7 +23,7 @@ export class RefreshTokenUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  async execute(rawRefreshToken: string): Promise<TRefreshResult> {
+  async execute(rawRefreshToken: string): Promise<RefreshResult> {
     if (!rawRefreshToken?.trim()) {
       throw new UnauthorizedException();
     }
@@ -59,9 +59,7 @@ export class RefreshTokenUseCase {
     const newRawRefreshToken = this.tokenProvider.generateRefreshToken();
     const newTokenHash = this.tokenProvider.hashToken(newRawRefreshToken);
     const authConfig = this.configService.get<IAuthConfig>('auth')!;
-    const expiresAt = new Date(
-      Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000,
-    );
+    const expiresAt = new Date(Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000);
 
     await this.refreshTokenRepository.create(
       RefreshTokenEntity.create({

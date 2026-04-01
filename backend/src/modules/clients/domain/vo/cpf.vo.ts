@@ -30,6 +30,10 @@ export class Cpf {
 
   private constructor(readonly value: string) {}
 
+  static isValidDigitChecksum(digits: string): boolean {
+    return digits.length === Cpf.LENGTH && isValidCpfDigits(digits);
+  }
+
   static create(raw: string): Cpf {
     if (typeof raw !== 'string') {
       throw new DomainError('CPF must be a string');

@@ -10,7 +10,7 @@ import type { TokenProviderPort } from '../../domain/ports/security/token-provid
 import type { PasswordResetRepositoryPort } from '../../domain/ports/repository/password-reset.repository.port';
 import type { NotificationQueuePort } from 'src/modules/notifications/domain/ports/queue/notification-queue.port';
 import { PasswordResetEntity } from '../../domain/entities/password-reset.entity';
-import type { TRequestPasswordReset } from '../dto/request-password-reset.dto';
+import type { RequestPasswordResetBody } from '../dto/request-password-reset.dto';
 
 const RESPONSE_MESSAGE = 'If this email is registered, a recovery link will be sent';
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -26,7 +26,7 @@ export class RequestPasswordResetUseCase {
     private readonly notificationQueue: NotificationQueuePort,
   ) {}
 
-  async execute(input: TRequestPasswordReset): Promise<string> {
+  async execute(input: RequestPasswordResetBody): Promise<string> {
     const user = await this.userRepository.findByEmail(input.email);
 
     if (!user) {

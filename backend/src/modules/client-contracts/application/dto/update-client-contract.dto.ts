@@ -10,6 +10,6 @@ export const SUpdateClientContract = z.object({
   address: SAddressBody.optional(),
 });
 
-export type TUpdateClientContract = z.infer<typeof SUpdateClientContract>;
+export type UpdateClientContractBody = z.infer<typeof SUpdateClientContract>;
 
 export class UpdateClientContractBodyDto extends createZodDto(SUpdateClientContract) {}

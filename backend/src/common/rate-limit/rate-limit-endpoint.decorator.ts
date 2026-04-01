@@ -1,8 +1,8 @@
 import { SetMetadata } from '@nestjs/common';
-import type { TRateLimitEndpointKey } from '../../config/rate-limit.config';
+import type { RateLimitEndpointKey } from '../../config/rate-limit.config';
 
 export const RATE_LIMIT_ENDPOINT_KEY = 'rateLimitEndpoint';
 
-export function RateLimitEndpoint(endpoint: TRateLimitEndpointKey) {
+export function RateLimitEndpoint(endpoint: RateLimitEndpointKey) {
   return SetMetadata(RATE_LIMIT_ENDPOINT_KEY, endpoint);
 }

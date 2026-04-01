@@ -13,6 +13,7 @@ import { standardError } from 'src/common/openapi/standard-error-doc.helper';
 import { CreateClientBodyDto } from 'src/modules/clients/application/dto/create-client.dto';
 import {
   ClientListEnvelopeOpenApiDto,
+  ClientSearchListEnvelopeOpenApiDto,
   ClientSingleEnvelopeOpenApiDto,
 } from '../schemas/client-public-http.openapi.dto';
 
@@ -40,6 +41,29 @@ export class ClientDoc {
         description:
           'Paginated list. Actual response wraps payload in `{ success, timestamp, data: { data, meta } }`.',
         type: ClientListEnvelopeOpenApiDto,
+      }),
+      standardError(400, 'Invalid query'),
+      standardError(401, 'Unauthorized'),
+      standardError(429, 'Rate limit'),
+    );
+  }
+
+  static Search() {
+    return applyDecorators(
+      Get('search'),
+      ApiOperation({
+        summary: 'Unified client search',
+        description:
+          'Single query `q`: CPF (with or without mask), internal numeric id, or address substring. Response is always paginated; exact CPF/id matches return at most one row on page 1.',
+      }),
+      ApiQuery({ name: 'q', required: true, type: String }),
+      ApiQuery({ name: 'page', required: false, type: Number, example: 1 }),
+      ApiQuery({ name: 'limit', required: false, type: Number, example: 20 }),
+      ApiResponse({
+        status: 200,
+        description:
+          'Search results. Actual response wraps payload in `{ success, timestamp, data: { data, meta } }`.',
+        type: ClientSearchListEnvelopeOpenApiDto,
       }),
       standardError(400, 'Invalid query'),
       standardError(401, 'Unauthorized'),

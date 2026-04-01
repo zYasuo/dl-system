@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { CreateClientUseCase } from 'src/modules/clients/application/use-cases/create-client.use-case';
 import { FindAllClientsUseCase } from 'src/modules/clients/application/use-cases/find-all-clients.use-case';
 import { FindClientByIdUseCase } from 'src/modules/clients/application/use-cases/find-client-by-id.use-case';
+import { SearchClientsUseCase } from 'src/modules/clients/application/use-cases/search-clients.use-case';
 import { ClientEntity } from 'src/modules/clients/domain/entities/client.entity';
 import { Cpf } from 'src/modules/clients/domain/vo/cpf.vo';
 import { Address } from 'src/common/vo/address.vo';
@@ -16,12 +17,14 @@ describe('ClientController', () => {
   let createClient: jest.Mocked<Pick<CreateClientUseCase, 'execute'>>;
   let findAll: jest.Mocked<Pick<FindAllClientsUseCase, 'execute'>>;
   let findById: jest.Mocked<Pick<FindClientByIdUseCase, 'execute'>>;
+  let searchClients: jest.Mocked<Pick<SearchClientsUseCase, 'execute'>>;
   const userId = randomUUID();
 
   beforeEach(async () => {
     createClient = { execute: jest.fn() };
     findAll = { execute: jest.fn() };
     findById = { execute: jest.fn() };
+    searchClients = { execute: jest.fn() };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [ClientController],
@@ -29,6 +32,7 @@ describe('ClientController', () => {
         { provide: CreateClientUseCase, useValue: createClient },
         { provide: FindAllClientsUseCase, useValue: findAll },
         { provide: FindClientByIdUseCase, useValue: findById },
+        { provide: SearchClientsUseCase, useValue: searchClients },
         {
           provide: APP_GUARD,
           useValue: {
@@ -53,6 +57,10 @@ describe('ClientController', () => {
 
   it('returns 400 for invalid query limit', () => {
     return request(app.getHttpServer()).get('/api/v1/clients').query({ limit: 200 }).expect(400);
+  });
+
+  it('returns 400 when search q is empty', () => {
+    return request(app.getHttpServer()).get('/api/v1/clients/search').query({ q: '   ' }).expect(400);
   });
 
   it('GET forwards to use case', async () => {

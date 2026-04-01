@@ -10,6 +10,6 @@ export const SCreateTicket = z.object({
     .max(Description.MAX_LENGTH, 'Description must be at most 255 characters'),
 });
 
-export type TCreateTicket = z.infer<typeof SCreateTicket>;
+export type CreateTicketBody = z.infer<typeof SCreateTicket>;
 
 export class CreateTicketBodyDto extends createZodDto(SCreateTicket) {}

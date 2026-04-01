@@ -8,7 +8,7 @@ export enum NotificationChannel {
   EMAIL = 'EMAIL',
 }
 
-export type TNotificationEntity = {
+export type NotificationEntityProps = {
   id: string;
   channel: NotificationChannel;
   recipient: string;
@@ -22,7 +22,7 @@ export type TNotificationEntity = {
 };
 
 export class NotificationEntity {
-  constructor(private readonly params: TNotificationEntity) {}
+  constructor(private readonly params: NotificationEntityProps) {}
 
   get id(): string {
     return this.params.id;
@@ -79,7 +79,7 @@ export class NotificationEntity {
     });
   }
 
-  static create(input: TNotificationEntity): NotificationEntity {
+  static create(input: NotificationEntityProps): NotificationEntity {
     return new NotificationEntity(input);
   }
 }

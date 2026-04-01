@@ -21,9 +21,9 @@ async function bootstrap() {
 
   if (isOpenApiDocsEnabled()) {
     setupOpenApiDocs(app, {
-      title: 'DL Tickets API',
+      title: 'DL System API',
       description:
-        'Tickets API with JWT access tokens and httpOnly refresh cookies. Responses use `{ success, timestamp, data }` (or error envelope). **Tickets** require `Authorization: Bearer <accessToken>`. Register at `POST /users`, then `POST /auth/login`.',
+        'DL System HTTP API: JWT access tokens and httpOnly refresh cookies. Responses use `{ success, timestamp, data }` (or error envelope). **Tickets**, **clients**, and **client contracts** require `Authorization: Bearer <accessToken>`. Register at `POST /users`, then `POST /auth/login`.',
       version: '0.0.1',
     });
   }

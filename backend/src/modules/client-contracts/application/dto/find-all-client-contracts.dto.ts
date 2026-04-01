@@ -15,6 +15,6 @@ export const SFindAllClientContracts = z.object({
   status: contractStatusZ.optional(),
 });
 
-export type TFindAllClientContracts = z.infer<typeof SFindAllClientContracts>;
+export type FindAllClientContractsQuery = z.infer<typeof SFindAllClientContracts>;
 
 export class FindAllClientContractsQueryDto extends createZodDto(SFindAllClientContracts) {}

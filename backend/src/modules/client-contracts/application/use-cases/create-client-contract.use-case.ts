@@ -10,7 +10,7 @@ import {
   ClientContractEntity,
   ClientContractStatus,
 } from '../../domain/entities/client-contract.entity';
-import type { TCreateClientContract } from '../dto/create-client-contract.dto';
+import type { CreateClientContractBody } from '../dto/create-client-contract.dto';
 
 function atStartOfUtcDay(yyyyMmDd: string): Date {
   return new Date(`${yyyyMmDd}T00:00:00.000Z`);
@@ -24,7 +24,7 @@ export class CreateClientContractUseCase {
     @Inject(CLIENT_REPOSITORY) private readonly clientRepository: ClientRepositoryPort,
   ) {}
 
-  async execute(input: TCreateClientContract): Promise<ClientContractEntity> {
+  async execute(input: CreateClientContractBody): Promise<ClientContractEntity> {
     const client = await this.clientRepository.findById(input.clientId);
     if (!client) {
       throw new NotFoundException('Client not found');

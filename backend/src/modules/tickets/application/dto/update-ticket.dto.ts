@@ -13,6 +13,6 @@ export const SUpdateTicket = z.object({
   updatedAt: z.string().min(1, 'updatedAt is required (ISO string from last read)'),
 });
 
-export type TUpdateTicket = z.infer<typeof SUpdateTicket>;
+export type UpdateTicketBody = z.infer<typeof SUpdateTicket>;
 
 export class UpdateTicketBodyDto extends createZodDto(SUpdateTicket) {}

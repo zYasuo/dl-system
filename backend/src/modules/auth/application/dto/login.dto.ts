@@ -6,6 +6,6 @@ export const SLogin = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export type TLogin = z.infer<typeof SLogin>;
+export type LoginBody = z.infer<typeof SLogin>;
 
 export class LoginBodyDto extends createZodDto(SLogin) {}

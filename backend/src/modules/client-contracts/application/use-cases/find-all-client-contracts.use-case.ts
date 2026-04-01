@@ -7,7 +7,7 @@ import {
   ClientContractEntity,
   ClientContractStatus,
 } from '../../domain/entities/client-contract.entity';
-import type { TFindAllClientContracts } from '../dto/find-all-client-contracts.dto';
+import type { FindAllClientContractsQuery } from '../dto/find-all-client-contracts.dto';
 
 @Injectable()
 export class FindAllClientContractsUseCase {
@@ -17,7 +17,7 @@ export class FindAllClientContractsUseCase {
   ) {}
 
   async execute(
-    query: TFindAllClientContracts,
+    query: FindAllClientContractsQuery,
   ): Promise<PaginatedResult<ClientContractEntity>> {
     const criteria: ClientContractListCriteria = {
       page: query.page,

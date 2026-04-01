@@ -1,12 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import type { IAuthConfig } from 'src/config/auth.config';
-import {
-  PASSWORD_RESET_REPOSITORY,
-  REFRESH_TOKEN_REPOSITORY,
-  TOKEN_PROVIDER,
-} from './di.tokens';
+import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
+import { PASSWORD_RESET_REPOSITORY, REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from './di.tokens';
 import { UsersModule } from '../users/users.module';
 import { NotificationModule } from '../notifications/notification.module';
 import { AuthController } from './infrastructure/inbound/http/controllers/auth.controller';

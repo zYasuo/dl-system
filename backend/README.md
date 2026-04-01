@@ -1,6 +1,6 @@
-# DL Tickets — Backend
+# DL System — Backend
 
-NestJS API for a ticket system: **authentication** (JWT + refresh rotation), users, tickets, caching, background notifications, and optional load testing.
+NestJS API for **DL System**: **authentication** (JWT + refresh rotation), users, tickets, **clients**, **client contracts**, caching, background notifications, and optional load testing.
 
 ## Stack
 
@@ -51,11 +51,26 @@ Bindings use **typed injection tokens** (`Symbol` / `InjectionToken`). Use cases
 | `src/modules/users/di.tokens.ts` | `USER_REPOSITORY`, `PASSWORD_HASHER` |
 | `src/modules/auth/di.tokens.ts` | `REFRESH_TOKEN_REPOSITORY`, `PASSWORD_RESET_REPOSITORY`, `TOKEN_PROVIDER` |
 | `src/modules/tickets/di.tokens.ts` | `TICKET_REPOSITORY` |
+| `src/modules/clients/di.tokens.ts` | `CLIENT_REPOSITORY` |
+| `src/modules/client-contracts/di.tokens.ts` | `CLIENT_CONTRACT_REPOSITORY` |
 | `src/modules/notifications/di.tokens.ts` | `NOTIFICATION_REPOSITORY`, `NOTIFICATION_QUEUE_PORT` |
 | `src/modules/cache/di.tokens.ts` | `CACHE_PORT` — wired in `CacheModule` with `useExisting: CacheService` |
 | `src/common/rate-limit/di.tokens.ts` | `RATE_LIMIT_STORE` — wired in `RateLimitModule` with `useExisting: RateLimitRedisStore` |
 
 Consumers import tokens from the **owning** module (e.g. auth use cases import `USER_REPOSITORY` from `users/di.tokens`). Feature modules **export** what others need (e.g. `UsersModule` exports `USER_REPOSITORY` and `PASSWORD_HASHER` for `AuthModule`). `QueueModule` only configures BullMQ; `DbModule` registers global Prisma (`nestjs-prisma`) — no extra tokens there.
+
+## HTTP routes (summary)
+
+All paths below use the **`/api/v1`** prefix.
+
+| Scope | Methods and paths |
+| ----- | ----------------- |
+| **Public** | `POST /users` · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/password-reset/request` · `POST /auth/password-reset/confirm` |
+| **JWT (Bearer)** | `GET`, `POST /tickets` · `GET`, `PATCH /tickets/:id` |
+| **JWT (Bearer)** | `GET`, `POST /clients` · `GET /clients/:id` |
+| **JWT (Bearer)** | `GET`, `POST /client-contracts` · `GET`, `PATCH /client-contracts/:id` |
+
+`:id` is a **UUID v4** in the URL.
 
 ## Authentication
 
@@ -64,15 +79,16 @@ Consumers import tokens from the **owning** module (e.g. auth use cases import `
 - **Logout:** `POST /api/v1/auth/logout` clears the refresh cookie and revokes the session server-side.
 - **Password reset:** `POST /api/v1/auth/password-reset/request` (always same success message) enqueues email; `POST /api/v1/auth/password-reset/confirm` with `token` + `newPassword`. Successful reset revokes all refresh tokens for that user.
 - **Protected routes:** global `JwtAuthGuard`; routes marked `@Public()` skip JWT (e.g. `POST /users`, `POST /auth/*`, password-reset).
-- **Tickets:** `GET/POST /tickets` and `PATCH /tickets/:uuid` require a valid access token. The ticket **owner** is taken from the token — do **not** send `userId` in the body. Updates by a non-owner return **403**.
+- **Tickets, clients, client contracts:** `GET`/`POST` (and `PATCH` where applicable) under `/tickets`, `/clients`, and `/client-contracts` require a valid access token.
+- **Tickets:** the ticket **owner** is taken from the token — do **not** send `userId` in the body. Updates by a non-owner return **403**.
 
-Rate limits for auth endpoints are configured in `src/config/rate-limit.config.ts` (login, refresh, password reset).
+Per-domain rate limits live in each module under `src/modules/<domain>/config/rate-limit.config.ts`; they are merged in `src/config/rate-limit.config.ts`. Shared env helpers: `src/common/rate-limit/rate-limit-env.ts`.
 
 Interactive API docs (when enabled): `/docs` — **Authorize** with a Bearer token from login.
 
 ## Identifiers (uuid vs internal id)
 
-Public API responses use **uuid** strings as resource ids (users, tickets). PostgreSQL uses an internal integer primary key for joins; it is **not** exposed in JSON.
+Public API responses use **uuid** strings as resource ids (users, tickets, clients, client contracts). PostgreSQL uses an internal integer primary key for joins; it is **not** exposed in JSON.
 
 ## Getting started
 
@@ -87,7 +103,7 @@ npx prisma migrate dev
 npm run start:dev
 ```
 
-API prefix: **`/api/v1`** (e.g. `POST /api/v1/auth/login`, `GET /api/v1/tickets` with Bearer token).
+API prefix: **`/api/v1`** (e.g. `POST /api/v1/auth/login`, `GET /api/v1/tickets` or `GET /api/v1/clients` with Bearer token).
 
 If you use Docker Compose in this repo, start Postgres and Redis so the app and queues can connect.
 
@@ -102,7 +118,7 @@ npm run load:race
 ```
 
 - **`load:tickets`** — many `POST /api/v1/tickets` (throughput); scripts should obtain a JWT (e.g. login) and send `Authorization: Bearer …` plus cookie if needed.
-- **`load:race`** — **optimistic-lock race**: `setup` creates one ticket (authenticated), then `PARALLEL` VUs send **`PATCH /api/v1/tickets/:uuid`** with the **same** `updatedAt`. Exactly **one** request should win (**200**); the rest should get **409 Conflict** (`ConcurrencyError`). k6’s `http_req_failed` rate will look high because **409 counts as failed** in k6; use the custom counters `race_patch_200` / `race_patch_409` for the real outcome.
+- **`load:race`** — **optimistic-lock race**: `setup` creates one ticket (authenticated), then `PARALLEL` VUs send **`PATCH /api/v1/tickets/:id`** with the **same** `updatedAt`. Exactly **one** request should win (**200**); the rest should get **409 Conflict** (`ConcurrencyError`). k6’s `http_req_failed` rate will look high because **409 counts as failed** in k6; use the custom counters `race_patch_200` / `race_patch_409` for the real outcome.
 
 Configure with env vars: `BASE_URL`, and either **`ACCESS_TOKEN`** (JWT from login) or **`LOGIN_EMAIL`** + **`LOGIN_PASSWORD`**. Optional: `VUS`, `DURATION`, `PARALLEL`. See `load-testing/create-tickets.k6.js` and `load-testing/race-ticket-update.k6.js`.
 

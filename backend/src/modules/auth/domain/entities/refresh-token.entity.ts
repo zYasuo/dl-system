@@ -1,4 +1,4 @@
-export type TRefreshTokenEntity = {
+export type RefreshTokenEntityProps = {
   id: number;
   tokenHash: string;
   familyId: string;
@@ -9,7 +9,7 @@ export type TRefreshTokenEntity = {
 };
 
 export class RefreshTokenEntity {
-  constructor(private readonly params: TRefreshTokenEntity) {}
+  constructor(private readonly params: RefreshTokenEntityProps) {}
 
   get id(): number {
     return this.params.id;
@@ -47,7 +47,7 @@ export class RefreshTokenEntity {
     return this.revokedAt !== null;
   }
 
-  static create(input: TRefreshTokenEntity): RefreshTokenEntity {
+  static create(input: RefreshTokenEntityProps): RefreshTokenEntity {
     return new RefreshTokenEntity(input);
   }
 }

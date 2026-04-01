@@ -46,6 +46,8 @@ export function setupOpenApiDocs(app: INestApplication, options: SetupOpenApiDoc
     .addTag('Auth', 'Sign-in, refresh (cookie), logout, password reset')
     .addTag('Users', 'Registration (public)')
     .addTag('Tickets', 'List / create / update — requires Bearer token')
+    .addTag('Clients', 'List / create / detail — requires Bearer token')
+    .addTag('Client contracts', 'List / create / update / detail — requires Bearer token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {

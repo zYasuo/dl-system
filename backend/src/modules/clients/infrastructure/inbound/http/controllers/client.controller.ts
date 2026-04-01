@@ -4,21 +4,31 @@ import { RateLimitEndpoint } from 'src/common/rate-limit/rate-limit-endpoint.dec
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
 import {
   CurrentUser,
-  type TAuthUser,
+  type AuthUser,
 } from 'src/modules/auth/infrastructure/inbound/http/decorators/current-user.decorator';
 import { CreateClientUseCase } from 'src/modules/clients/application/use-cases/create-client.use-case';
 import { FindAllClientsUseCase } from 'src/modules/clients/application/use-cases/find-all-clients.use-case';
 import { FindClientByIdUseCase } from 'src/modules/clients/application/use-cases/find-client-by-id.use-case';
+import { SearchClientsUseCase } from 'src/modules/clients/application/use-cases/search-clients.use-case';
 import {
   SCreateClient,
-  type TCreateClient,
+  type CreateClientBody,
 } from 'src/modules/clients/application/dto/create-client.dto';
 import {
   SFindAllClients,
-  type TFindAllClients,
+  type FindAllClientsQuery,
 } from 'src/modules/clients/application/dto/find-all-clients.dto';
+import {
+  SSearchClients,
+  type SearchClientsQuery,
+} from 'src/modules/clients/application/dto/search-clients.dto';
 import { ApiClients, ClientDoc } from '../docs/client-doc.decorator';
-import { toClientPublicHttp, type ClientPublicHttp } from '../mappers/client-http.mapper';
+import {
+  toClientPublicHttp,
+  toClientSearchRowHttp,
+  type ClientPublicHttp,
+  type ClientSearchRowHttp,
+} from '../mappers/client-http.mapper';
 
 /** All routes require a valid JWT (global JwtAuthGuard on the app). */
 @Controller('clients')
@@ -28,13 +38,27 @@ export class ClientController {
     private readonly createClientUseCase: CreateClientUseCase,
     private readonly findAllClientsUseCase: FindAllClientsUseCase,
     private readonly findClientByIdUseCase: FindClientByIdUseCase,
+    private readonly searchClientsUseCase: SearchClientsUseCase,
   ) {}
+
+  @RateLimitEndpoint('clients-search')
+  @ClientDoc.Search()
+  async search(
+    @Query(new ZodValidationPipe(SSearchClients)) query: SearchClientsQuery,
+    @CurrentUser() user: AuthUser,
+  ): Promise<PaginatedResult<ClientSearchRowHttp>> {
+    const result = await this.searchClientsUseCase.execute(query, user.sub);
+    return {
+      data: result.data.map(toClientSearchRowHttp),
+      meta: result.meta,
+    };
+  }
 
   @RateLimitEndpoint('clients-list')
   @ClientDoc.List()
   async findAll(
-    @Query(new ZodValidationPipe(SFindAllClients)) query: TFindAllClients,
-    @CurrentUser() _user: TAuthUser,
+    @Query(new ZodValidationPipe(SFindAllClients)) query: FindAllClientsQuery,
+    @CurrentUser() _user: AuthUser,
   ): Promise<PaginatedResult<ClientPublicHttp>> {
     const result = await this.findAllClientsUseCase.execute(query);
     return {
@@ -47,7 +71,7 @@ export class ClientController {
   @ClientDoc.FindById()
   async findById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser() _user: TAuthUser,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ClientPublicHttp> {
     const client = await this.findClientByIdUseCase.execute(id);
     return toClientPublicHttp(client);
@@ -56,8 +80,8 @@ export class ClientController {
   @RateLimitEndpoint('clients-create')
   @ClientDoc.Create()
   async create(
-    @Body(new ZodValidationPipe(SCreateClient)) dto: TCreateClient,
-    @CurrentUser() _user: TAuthUser,
+    @Body(new ZodValidationPipe(SCreateClient)) dto: CreateClientBody,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ClientPublicHttp> {
     const client = await this.createClientUseCase.execute(dto);
     return toClientPublicHttp(client);

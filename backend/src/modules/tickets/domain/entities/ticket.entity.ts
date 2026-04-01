@@ -6,7 +6,7 @@ export enum TicketStatus {
   DONE = 'DONE',
 }
 
-export type TTicketEntity = {
+export type TicketEntityProps = {
   id: string;
   title: string;
   description: Description;
@@ -17,7 +17,7 @@ export type TTicketEntity = {
 };
 
 export class TicketEntity {
-  constructor(private readonly params: TTicketEntity) {}
+  constructor(private readonly params: TicketEntityProps) {}
 
   get id(): string {
     return this.params.id;
@@ -47,7 +47,7 @@ export class TicketEntity {
     return this.params.userId;
   }
 
-  static create(input: TTicketEntity): TicketEntity {
+  static create(input: TicketEntityProps): TicketEntity {
     const description = Description.create(input.description.value);
     return new TicketEntity({
       ...input,

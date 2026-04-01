@@ -1,6 +1,6 @@
 import { DomainError } from 'src/common/errors/domain.error';
 
-export type TAddressInput = {
+export type AddressInput = {
   street: string;
   number: string;
   complement?: string;
@@ -25,7 +25,7 @@ export class Address {
     readonly zipCode: string,
   ) {}
 
-  static create(input: TAddressInput): Address {
+  static create(input: AddressInput): Address {
     if (!input || typeof input !== 'object') {
       throw new DomainError('Address is required');
     }

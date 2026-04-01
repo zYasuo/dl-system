@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   TokenProviderPort,
-  type TAccessTokenPayload,
+  type AccessTokenPayload,
 } from 'src/modules/auth/domain/ports/security/token-provider.port';
 
 @Injectable()
@@ -12,12 +12,12 @@ export class JwtTokenProvider extends TokenProviderPort {
     super();
   }
 
-  async signAccessToken(payload: TAccessTokenPayload): Promise<string> {
+  async signAccessToken(payload: AccessTokenPayload): Promise<string> {
     return this.jwtService.signAsync(payload);
   }
 
-  async verifyAccessToken(token: string): Promise<TAccessTokenPayload> {
-    return this.jwtService.verifyAsync<TAccessTokenPayload>(token);
+  async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
+    return this.jwtService.verifyAsync<AccessTokenPayload>(token);
   }
 
   generateRefreshToken(): string {

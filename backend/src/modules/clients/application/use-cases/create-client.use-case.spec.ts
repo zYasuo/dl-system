@@ -6,11 +6,13 @@ import type { ClientRepositoryPort } from '../../domain/ports/repository/client.
 import { ClientEntity } from '../../domain/entities/client.entity';
 import { Cpf } from '../../domain/vo/cpf.vo';
 import { Address } from 'src/common/vo/address.vo';
+import { ClientCacheKeyBuilder } from '../cache/client-cache-key-builder';
 import { CreateClientUseCase } from './create-client.use-case';
 
 describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;
   let repo: jest.Mocked<ClientRepositoryPort>;
+  let cacheKeys: jest.Mocked<Pick<ClientCacheKeyBuilder, 'bumpDetailVersion' | 'bumpListVersion'>>;
 
   const address = {
     street: 'Rua A',
@@ -26,14 +28,22 @@ describe('CreateClientUseCase', () => {
       create: jest.fn(),
       findAll: jest.fn(),
       findById: jest.fn(),
+      findByInternalId: jest.fn(),
       findByCpf: jest.fn(),
       findByCnpj: jest.fn(),
+      searchByAddress: jest.fn(),
+    };
+
+    cacheKeys = {
+      bumpDetailVersion: jest.fn().mockResolvedValue(undefined),
+      bumpListVersion: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateClientUseCase,
         { provide: CLIENT_REPOSITORY, useValue: repo },
+        { provide: ClientCacheKeyBuilder, useValue: cacheKeys },
       ],
     }).compile();
 
@@ -68,5 +78,7 @@ describe('CreateClientUseCase', () => {
 
     expect(created.name).toBe('ACME');
     expect(repo.create).toHaveBeenCalled();
+    expect(cacheKeys.bumpDetailVersion).toHaveBeenCalledWith(created.id);
+    expect(cacheKeys.bumpListVersion).toHaveBeenCalled();
   });
 });

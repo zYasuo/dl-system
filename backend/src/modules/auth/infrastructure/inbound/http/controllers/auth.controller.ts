@@ -9,17 +9,17 @@ import { RefreshTokenUseCase } from 'src/modules/auth/application/use-cases/refr
 import { LogoutUseCase } from 'src/modules/auth/application/use-cases/logout.use-case';
 import { RequestPasswordResetUseCase } from 'src/modules/auth/application/use-cases/request-password-reset.use-case';
 import { ResetPasswordUseCase } from 'src/modules/auth/application/use-cases/reset-password.use-case';
-import { SLogin, type TLogin } from 'src/modules/auth/application/dto/login.dto';
+import { SLogin, type LoginBody } from 'src/modules/auth/application/dto/login.dto';
 import {
   SRequestPasswordReset,
-  type TRequestPasswordReset,
+  type RequestPasswordResetBody,
 } from 'src/modules/auth/application/dto/request-password-reset.dto';
 import {
   SResetPassword,
-  type TResetPassword,
+  type ResetPasswordBody,
 } from 'src/modules/auth/application/dto/reset-password.dto';
 import { ApiAuth, AuthDoc } from '../docs/auth-doc.decorator';
-import type { IAuthConfig } from 'src/config/auth.config';
+import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
 import {
   clearRefreshTokenCookie,
   readRefreshTokenFromRequest,
@@ -43,7 +43,7 @@ export class AuthController {
   @AuthDoc.Login()
   @HttpCode(200)
   async login(
-    @Body(new ZodValidationPipe(SLogin)) dto: TLogin,
+    @Body(new ZodValidationPipe(SLogin)) dto: LoginBody,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ accessToken: string }> {
     const result = await this.loginUseCase.execute(dto);
@@ -88,7 +88,7 @@ export class AuthController {
   @AuthDoc.PasswordResetRequest()
   @HttpCode(200)
   async requestPasswordReset(
-    @Body(new ZodValidationPipe(SRequestPasswordReset)) dto: TRequestPasswordReset,
+    @Body(new ZodValidationPipe(SRequestPasswordReset)) dto: RequestPasswordResetBody,
   ): Promise<{ message: string }> {
     const message = await this.requestPasswordResetUseCase.execute(dto);
     return { message };
@@ -99,7 +99,7 @@ export class AuthController {
   @AuthDoc.PasswordResetConfirm()
   @HttpCode(200)
   async confirmPasswordReset(
-    @Body(new ZodValidationPipe(SResetPassword)) dto: TResetPassword,
+    @Body(new ZodValidationPipe(SResetPassword)) dto: ResetPasswordBody,
   ): Promise<{ message: string }> {
     await this.resetPasswordUseCase.execute(dto);
     return { message: 'Password has been updated' };
