@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './modules/app.module';
+import { getTrustProxySetting } from './common/http/trust-proxy';
 import { TransformResponseInterceptor } from './common/http/transform-response.interceptor';
 import { HttpExceptionFilter } from './common/http/http-exception.filter';
 import { getRedisConnectionOptions } from './common/redis/redis-connection.options';
@@ -8,7 +10,11 @@ import { isOpenApiDocsEnabled } from './common/openapi/openapi-docs-enabled';
 import { setupOpenApiDocs } from './common/openapi/setup-openapi-docs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const trust = getTrustProxySetting();
+  if (trust !== false) {
+    app.set('trust proxy', trust);
+  }
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.REDIS,

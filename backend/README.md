@@ -84,7 +84,9 @@ All paths below use the **`/api/v1`** prefix.
 
 Per-domain rate limits live in each module under `src/modules/<domain>/config/rate-limit.config.ts`; they are merged in `src/config/rate-limit.config.ts`. Shared env helpers: `src/common/rate-limit/rate-limit-env.ts`.
 
-Interactive API docs (when enabled): `/docs` — **Authorize** with a Bearer token from login.
+Rate limits key clients by **`req.ip`** (then socket). The app does **not** trust `X-Forwarded-For` unless you enable Express **trust proxy**: set **`TRUST_PROXY=1`** (or `true`, or a hop count) when the API runs behind a **trusted** reverse proxy so `req.ip` reflects the real client. Leave `TRUST_PROXY` unset when clients hit Nest directly (avoids spoofed headers bypassing limits).
+
+Interactive API docs at **`/docs`**: set **`ENABLE_OPENAPI_DOCS=true`** to enable in any environment, or **`false`** to disable. If unset, docs default to **on** only when `NODE_ENV` is empty or **`development`** (so staging with `NODE_ENV=staging` stays off until you opt in). **Authorize** in the UI with a Bearer token from login.
 
 ## Identifiers (uuid vs internal id)
 

@@ -50,7 +50,7 @@ The API defaults to **http://localhost:3000** with the **`/api/v1`** prefix. Exa
 - `GET /api/v1/tickets` with `Authorization: Bearer …`
 - `GET /api/v1/clients` and `GET /api/v1/client-contracts` (also require a Bearer token)
 
-Interactive OpenAPI docs (when enabled): `/docs`.
+Interactive OpenAPI docs at `/docs`: enabled when `ENABLE_OPENAPI_DOCS=true`, or by default in local `development` (see [backend/README.md](backend/README.md)).
 
 ### 3. Frontend
 

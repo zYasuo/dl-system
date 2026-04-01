@@ -6,5 +6,6 @@ export function isOpenApiDocsEnabled(): boolean {
   if (v === 'false') {
     return false;
   }
-  return process.env.NODE_ENV !== 'production';
+  const nodeEnv = process.env.NODE_ENV;
+  return !nodeEnv || nodeEnv === 'development';
 }

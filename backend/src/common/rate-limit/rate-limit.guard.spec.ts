@@ -89,7 +89,7 @@ describe('RateLimitGuard', () => {
     }
   });
 
-  it('uses first x-forwarded-for address as client key', async () => {
+  it('does not use x-forwarded-for; uses req.ip (set by Express when trust proxy is on)', async () => {
     const reflector = {
       getAllAndOverride: jest.fn().mockReturnValue('tickets-list'),
     } as unknown as Reflector;
@@ -100,7 +100,7 @@ describe('RateLimitGuard', () => {
       ip: '127.0.0.1',
     });
     await guard.canActivate(ctx);
-    expect(store.increment).toHaveBeenCalledWith('tickets-list:203.0.113.5', 60);
+    expect(store.increment).toHaveBeenCalledWith('tickets-list:127.0.0.1', 60);
   });
 
   it('falls back to socket.remoteAddress when ip missing', async () => {

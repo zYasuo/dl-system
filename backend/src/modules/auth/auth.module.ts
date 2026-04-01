@@ -31,6 +31,10 @@ import { ResetPasswordUseCase } from './application/use-cases/reset-password.use
           secret: auth.jwtSecret,
           signOptions: {
             expiresIn: auth.accessExpirationSeconds,
+            algorithm: 'HS256',
+          },
+          verifyOptions: {
+            algorithms: ['HS256'],
           },
         };
       },
