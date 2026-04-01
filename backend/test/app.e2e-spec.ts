@@ -12,13 +12,13 @@ import { HttpExceptionFilter } from '../src/common/http/http-exception.filter';
 import { TransformResponseInterceptor } from '../src/common/http/transform-response.interceptor';
 import type { CachePort } from '../src/common/ports/cache/cache.ports';
 import { rateLimitConfig } from '../src/config/rate-limit.config';
+import { CACHE_PORT } from '../src/modules/cache/di.tokens';
 import {
-  CACHE_PORT,
   NOTIFICATION_QUEUE_PORT,
   NOTIFICATION_REPOSITORY,
-  TICKET_REPOSITORY,
-  USER_REPOSITORY,
-} from '../src/di/tokens';
+} from '../src/modules/notifications/di.tokens';
+import { TICKET_REPOSITORY } from '../src/modules/tickets/di.tokens';
+import { USER_REPOSITORY } from '../src/modules/users/di.tokens';
 import { CreateTicketUseCase } from '../src/modules/tickets/application/use-case/create-ticket.use-case';
 import { FindAllTicketsUseCase } from '../src/modules/tickets/application/use-case/find-all-tickets.use-case';
 import { UpdateTicketUseCase } from '../src/modules/tickets/application/use-case/update-ticket.use-case';

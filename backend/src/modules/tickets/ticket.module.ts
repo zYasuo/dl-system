@@ -9,7 +9,7 @@ import { CacheModule } from '../cache/cache.module';
 import { NotificationModule } from '../notifications/notification.module';
 import { UsersModule } from '../users/users.module';
 import { TicketCacheKeyBuilder } from './application/cache/ticket-key-builder.cache';
-import { TICKET_REPOSITORY } from 'src/di/tokens';
+import { TICKET_REPOSITORY } from './di.tokens';
 
 @Module({
   imports: [CacheModule, NotificationModule, UsersModule],

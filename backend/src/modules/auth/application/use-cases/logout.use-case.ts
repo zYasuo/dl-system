@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from 'src/di/tokens';
+import { REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from '../../di.tokens';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
 

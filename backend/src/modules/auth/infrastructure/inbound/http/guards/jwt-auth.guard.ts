@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { TokenProviderPort } from 'src/modules/auth/domain/ports/security/token-provider.port';
-import { TOKEN_PROVIDER } from 'src/di/tokens';
+import { TOKEN_PROVIDER } from '../../../../di.tokens';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type { TAuthUser } from '../decorators/current-user.decorator';
 

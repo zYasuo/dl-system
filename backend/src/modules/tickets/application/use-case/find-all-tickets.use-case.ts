@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { PaginatedResult } from 'src/common/pagination/pagination.types';
-import { CACHE_PORT, TICKET_REPOSITORY } from 'src/di/tokens';
+import { CACHE_PORT } from 'src/modules/cache/di.tokens';
+import { TICKET_REPOSITORY } from '../../di.tokens';
 import type { CachePort } from 'src/common/ports/cache/cache.ports';
 import { buildCacheLockKey, CACHE_LOCK_POLICY } from 'src/common/cache/cache-lock.policy';
 import { TicketEntity } from '../../domain/entities/ticket.entity';

@@ -42,19 +42,20 @@ Benefits:
 
 The codebase follows a **ports-and-adapters** style: domain and application layers depend on **ports** (abstract classes and TypeScript types), and infrastructure supplies **adapters** (Prisma repositories, BullMQ queue adapter, Redis cache, JWT provider).
 
-### Dependency injection tokens (`src/di/tokens/`)
+### Dependency injection tokens (`di.tokens.ts` per module)
 
-Bindings use **shared injection tokens** (typed `Symbol` / `InjectionToken`). Use cases and guards inject with `@Inject(TOKEN)`; modules register `provide` + `useClass` or `useExisting` (e.g. `CACHE_PORT` → `CacheService`, `RATE_LIMIT_STORE` → `RateLimitRedisStore`). Files are grouped by concern:
+Bindings use **typed injection tokens** (`Symbol` / `InjectionToken`). Use cases and guards inject with `@Inject(TOKEN)`; modules register `provide` + `useClass` or `useExisting` (e.g. `CACHE_PORT` → `CacheService`, `RATE_LIMIT_STORE` → `RateLimitRedisStore`). Each feature owns its tokens next to the module:
 
-| File | Tokens (examples) |
-| ---- | ----------------- |
-| `repositories.tokens.ts` | `USER_REPOSITORY`, `TICKET_REPOSITORY`, `NOTIFICATION_REPOSITORY`, `REFRESH_TOKEN_REPOSITORY`, `PASSWORD_RESET_REPOSITORY` |
-| `security.tokens.ts` | `PASSWORD_HASHER`, `TOKEN_PROVIDER` (JWT sign/verify/hash helpers) |
-| `cache.tokens.ts` | `CACHE_PORT` — wired in `CacheModule` with `useExisting: CacheService` |
-| `queue.tokens.ts` | `NOTIFICATION_QUEUE_PORT` |
-| `rate-limit.tokens.ts` | `RATE_LIMIT_STORE` — wired in `RateLimitModule` with `useExisting: RateLimitRedisStore` |
+| Location | Tokens (examples) |
+| -------- | ----------------- |
+| `src/modules/users/di.tokens.ts` | `USER_REPOSITORY`, `PASSWORD_HASHER` |
+| `src/modules/auth/di.tokens.ts` | `REFRESH_TOKEN_REPOSITORY`, `PASSWORD_RESET_REPOSITORY`, `TOKEN_PROVIDER` |
+| `src/modules/tickets/di.tokens.ts` | `TICKET_REPOSITORY` |
+| `src/modules/notifications/di.tokens.ts` | `NOTIFICATION_REPOSITORY`, `NOTIFICATION_QUEUE_PORT` |
+| `src/modules/cache/di.tokens.ts` | `CACHE_PORT` — wired in `CacheModule` with `useExisting: CacheService` |
+| `src/common/rate-limit/di.tokens.ts` | `RATE_LIMIT_STORE` — wired in `RateLimitModule` with `useExisting: RateLimitRedisStore` |
 
-Feature modules **export** the tokens other modules need (e.g. `UsersModule` exports `USER_REPOSITORY` and `PASSWORD_HASHER` for `AuthModule`). `QueueModule` only configures BullMQ; `DbModule` registers global Prisma (`nestjs-prisma`) — no extra tokens there.
+Consumers import tokens from the **owning** module (e.g. auth use cases import `USER_REPOSITORY` from `users/di.tokens`). Feature modules **export** what others need (e.g. `UsersModule` exports `USER_REPOSITORY` and `PASSWORD_HASHER` for `AuthModule`). `QueueModule` only configures BullMQ; `DbModule` registers global Prisma (`nestjs-prisma`) — no extra tokens there.
 
 ## Authentication
 

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { NotificationRepositoryPort } from '../../domain/ports/repository/notification.repository.port';
-import { NOTIFICATION_REPOSITORY } from 'src/di/tokens';
+import { NOTIFICATION_REPOSITORY } from '../../di.tokens';
 
 @Injectable()
 export class SendNotificationUseCase {

@@ -5,7 +5,7 @@ import { NotificationQueueAdapter } from './infrastructure/outbound/queue/notifi
 import { NotificationConsumer } from './infrastructure/outbound/queue/notification.consumer';
 import { SendNotificationUseCase } from './application/use-case/send-notification.use-case';
 import { SendPasswordResetEmailUseCase } from './application/use-case/send-password-reset-email.use-case';
-import { NOTIFICATION_QUEUE_PORT, NOTIFICATION_REPOSITORY } from 'src/di/tokens';
+import { NOTIFICATION_QUEUE_PORT, NOTIFICATION_REPOSITORY } from './di.tokens';
 
 const QUEUE_NAME = 'notifications';
 

@@ -9,7 +9,7 @@ import {
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
 import { randomUUID } from 'node:crypto';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
-import { PASSWORD_HASHER, USER_REPOSITORY } from 'src/di/tokens';
+import { PASSWORD_HASHER, USER_REPOSITORY } from '../../di.tokens';
 
 @Injectable()
 export class CreateUserUseCase {

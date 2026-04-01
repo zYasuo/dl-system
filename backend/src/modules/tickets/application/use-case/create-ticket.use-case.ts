@@ -1,12 +1,12 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { CACHE_PORT } from 'src/modules/cache/di.tokens';
 import {
-  CACHE_PORT,
   NOTIFICATION_QUEUE_PORT,
   NOTIFICATION_REPOSITORY,
-  TICKET_REPOSITORY,
-  USER_REPOSITORY,
-} from 'src/di/tokens';
+} from 'src/modules/notifications/di.tokens';
+import { USER_REPOSITORY } from 'src/modules/users/di.tokens';
+import { TICKET_REPOSITORY } from '../../di.tokens';
 import type { TicketRepositoryPort } from '../../domain/ports/repository/ticket.repository.port';
 import { TicketEntity, TicketStatus } from '../../domain/entities/ticket.entity';
 import { Description } from '../../domain/vo/description.vo';

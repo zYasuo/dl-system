@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TICKET_REPOSITORY } from 'src/di/tokens';
+import { TICKET_REPOSITORY } from '../../di.tokens';
 import type { TicketRepositoryPort } from '../../domain/ports/repository/ticket.repository.port';
 import { TicketEntity } from '../../domain/entities/ticket.entity';
 

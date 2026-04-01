@@ -6,7 +6,7 @@ import {
   PASSWORD_RESET_REPOSITORY,
   REFRESH_TOKEN_REPOSITORY,
   TOKEN_PROVIDER,
-} from 'src/di/tokens';
+} from './di.tokens';
 import { UsersModule } from '../users/users.module';
 import { NotificationModule } from '../notifications/notification.module';
 import { AuthController } from './infrastructure/inbound/http/controllers/auth.controller';

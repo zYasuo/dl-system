@@ -4,7 +4,7 @@ import { UserController } from 'src/modules/users/infrastructure/inbound/http/co
 import { CreateUserUseCase } from 'src/modules/users/application/use-cases/create-user.use-case';
 import { UserRepository } from 'src/modules/users/infrastructure/outbound/persistence/repositories/user.repository';
 import { Argon2PasswordHasher } from 'src/modules/users/infrastructure/outbound/security/argon2-password-hasher.security';
-import { PASSWORD_HASHER, USER_REPOSITORY } from 'src/di/tokens';
+import { PASSWORD_HASHER, USER_REPOSITORY } from './di.tokens';
 
 @Module({
   imports: [DbModule],

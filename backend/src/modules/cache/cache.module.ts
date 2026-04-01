@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CACHE_PORT } from 'src/di/tokens';
+import { CACHE_PORT } from './di.tokens';
 import { CacheService } from './services/cache.service';
 
 @Module({

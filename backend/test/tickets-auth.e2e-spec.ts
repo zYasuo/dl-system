@@ -10,7 +10,7 @@ import { RateLimitRedisStore } from '../src/common/rate-limit/rate-limit-redis.s
 import { HttpExceptionFilter } from '../src/common/http/http-exception.filter';
 import { TransformResponseInterceptor } from '../src/common/http/transform-response.interceptor';
 import { rateLimitConfig } from '../src/config/rate-limit.config';
-import { TOKEN_PROVIDER } from '../src/di/tokens';
+import { TOKEN_PROVIDER } from '../src/modules/auth/di.tokens';
 import { JwtAuthGuard } from '../src/modules/auth/infrastructure/inbound/http/guards/jwt-auth.guard';
 import { TicketController } from '../src/modules/tickets/infrastructure/inbound/http/controllers/ticket.controller';
 import { CreateTicketUseCase } from '../src/modules/tickets/application/use-case/create-ticket.use-case';

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { CachePort } from 'src/common/ports/cache/cache.ports';
-import { CACHE_PORT } from 'src/di/tokens';
+import { CACHE_PORT } from 'src/modules/cache/di.tokens';
 import type { TicketListCriteria } from '../../domain/criteria/ticket-list.criteria';
 
 /** Redis key for the list-cache version of a single user (invalidates only that user's list pages). */

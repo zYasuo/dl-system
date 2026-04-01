@@ -9,7 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { RATE_LIMIT_STORE, type RateLimitStore } from 'src/di/tokens';
+import { RATE_LIMIT_STORE, type RateLimitStore } from './di.tokens';
 import type {
   IRateLimitConfig,
   TRateLimitEndpointKey,
