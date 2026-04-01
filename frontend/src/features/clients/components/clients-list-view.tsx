@@ -34,6 +34,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ClientModal } from "@/features/clients/components/client-modal/client-modal";
 import {
   Table,
   TableBody,
@@ -79,6 +80,9 @@ function ClientsListCard({
 }: ClientsListCardProps) {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const [modalClientId, setModalClientId] = useState<string | null>(null);
+  const [clientModalSession, setClientModalSession] = useState(0);
 
   const updatePage = (next: number | ((p: number) => number)) => {
     setSelectedId(null);
@@ -113,8 +117,27 @@ function ClientsListCard({
     return `${from.toLocaleString("pt-PT")} – ${to.toLocaleString("pt-PT")} de ${meta.total.toLocaleString("pt-PT")}`;
   }, [meta, isPending, clients.length]);
 
+  const openCreateModal = () => {
+    setModalClientId(null);
+    setClientModalSession((s) => s + 1);
+    setClientModalOpen(true);
+  };
+
+  const openEditModal = (id: string) => {
+    setSelectedId(id);
+    setModalClientId(id);
+    setClientModalSession((s) => s + 1);
+    setClientModalOpen(true);
+  };
+
   return (
     <>
+      <ClientModal
+        key={clientModalSession}
+        open={clientModalOpen}
+        onOpenChange={setClientModalOpen}
+        clientId={modalClientId}
+      />
       {isError ? (
         <ErrorAlert title="Não foi possível carregar os clientes" error={error} />
       ) : null}
@@ -142,10 +165,22 @@ function ClientsListCard({
               </Link>
               <Button
                 type="button"
+                variant="secondary"
+                className="gap-1.5"
+                onClick={openCreateModal}
+              >
+                <Plus className="size-4 shrink-0" aria-hidden />
+                Novo (modal)
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
                 className="gap-1.5"
-                disabled
-                title={API_DISABLED_TITLE}
+                disabled={!selectedId}
+                title={
+                  selectedId ? "Editar no modal" : "Seleccione uma linha na tabela"
+                }
+                onClick={() => selectedId && openEditModal(selectedId)}
               >
                 <Pencil className="size-4 shrink-0" aria-hidden />
                 Editar
@@ -227,7 +262,7 @@ function ClientsListCard({
                         selectedId === c.id && "bg-muted/50",
                       )}
                       aria-selected={selectedId === c.id}
-                      onClick={() => setSelectedId(c.id)}
+                      onClick={() => openEditModal(c.id)}
                     >
                       <TableCell className="font-medium">{c.name}</TableCell>
                       <TableCell className="hidden text-muted-foreground sm:table-cell">
