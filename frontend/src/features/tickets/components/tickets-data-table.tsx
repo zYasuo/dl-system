@@ -341,7 +341,6 @@ export function TicketsDataTable({
 
   const sortingState = [{ id: sortBy, desc: sortOrder === "desc" }];
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- useReactTable; ordenação vem da API
   const table = useReactTable({
     data,
     columns,

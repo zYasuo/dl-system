@@ -691,11 +691,717 @@
           "Tickets"
         ]
       }
+    },
+    "/api/v1/clients/search": {
+      "get": {
+        "description": "Single query `q`: CPF (with or without mask), internal numeric id, or address substring. Response is always paginated; exact CPF/id matches return at most one row on page 1.",
+        "operationId": "ClientController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results. Actual response wraps payload in `{ success, timestamp, data: { data, meta } }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientSearchListEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Unified client search",
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/clients": {
+      "get": {
+        "operationId": "ClientController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "name",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list. Actual response wraps payload in `{ success, timestamp, data: { data, meta } }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientListEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List clients (pagination)",
+        "tags": [
+          "Clients"
+        ]
+      },
+      "post": {
+        "description": "Requires a valid JWT (global JwtAuthGuard). Creates a business Client (attended customer), not a system User.",
+        "operationId": "ClientController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client created. Actual response wraps payload in `{ success, timestamp, data }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientSingleEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Zod validation / domain rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate CPF/CNPJ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create client",
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/clients/{id}": {
+      "get": {
+        "operationId": "ClientController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client found. Actual response wraps payload in `{ success, timestamp, data }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientSingleEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get client by id",
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/client-contracts": {
+      "get": {
+        "operationId": "ClientContractController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "contractNumber",
+                "startDate",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "clientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "ACTIVE",
+                "EXPIRED",
+                "CANCELLED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list. Actual response wraps payload in `{ success, timestamp, data: { data, meta } }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientContractListEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List client contracts (pagination)",
+        "tags": [
+          "Client contracts"
+        ]
+      },
+      "post": {
+        "description": "Requires a valid JWT. No persisted link to User — only the authenticated caller is implied by the request.",
+        "operationId": "ClientContractController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientContractBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contract created. Actual response wraps payload in `{ success, timestamp, data }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientContractSingleEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Zod validation / domain rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create client contract",
+        "tags": [
+          "Client contracts"
+        ]
+      }
+    },
+    "/api/v1/client-contracts/{id}": {
+      "get": {
+        "operationId": "ClientContractController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract found. Actual response wraps payload in `{ success, timestamp, data }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientContractSingleEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get client contract by id",
+        "tags": [
+          "Client contracts"
+        ]
+      },
+      "patch": {
+        "operationId": "ClientContractController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientContractBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract updated. Actual response wraps payload in `{ success, timestamp, data }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientContractSingleEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Zod validation / domain rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update client contract",
+        "tags": [
+          "Client contracts"
+        ]
+      }
     }
   },
   "info": {
-    "title": "DL Tickets API",
-    "description": "Tickets API with JWT access tokens and httpOnly refresh cookies. Responses use `{ success, timestamp, data }` (or error envelope). **Tickets** require `Authorization: Bearer <accessToken>`. Register at `POST /users`, then `POST /auth/login`.",
+    "title": "DL System API",
+    "description": "DL System HTTP API: JWT access tokens and httpOnly refresh cookies. Responses use `{ success, timestamp, data }` (or error envelope). **Tickets**, **clients**, and **client contracts** require `Authorization: Bearer <accessToken>`. Register at `POST /users`, then `POST /auth/login`.",
     "version": "0.0.1",
     "contact": {}
   },
@@ -711,6 +1417,14 @@
     {
       "name": "Tickets",
       "description": "List / create / update — requires Bearer token"
+    },
+    {
+      "name": "Clients",
+      "description": "List / create / detail — requires Bearer token"
+    },
+    {
+      "name": "Client contracts",
+      "description": "List / create / update / detail — requires Bearer token"
     }
   ],
   "servers": [
@@ -1074,24 +1788,6 @@
           "data"
         ]
       },
-      "CreateTicketBodyDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 255
-          }
-        },
-        "required": [
-          "title",
-          "description"
-        ]
-      },
       "TicketSingleEnvelopeOpenApiDto": {
         "type": "object",
         "properties": {
@@ -1110,6 +1806,24 @@
           "success",
           "timestamp",
           "data"
+        ]
+      },
+      "CreateTicketBodyDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "title",
+          "description"
         ]
       },
       "UpdateTicketBodyDto": {
@@ -1143,6 +1857,550 @@
           "status",
           "updatedAt"
         ]
+      },
+      "ClientAddressOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "complement": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "8 digits"
+          }
+        },
+        "required": [
+          "street",
+          "number",
+          "neighborhood",
+          "city",
+          "state",
+          "zipCode"
+        ]
+      },
+      "ClientPublicHttpOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cpf": {
+            "type": "object",
+            "nullable": true
+          },
+          "cnpj": {
+            "type": "object",
+            "nullable": true
+          },
+          "address": {
+            "$ref": "#/components/schemas/ClientAddressOpenApiDto"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "cpf",
+          "cnpj",
+          "address",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ClientSearchMatchOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cpf",
+              "id",
+              "address"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "partial"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "confidence"
+        ]
+      },
+      "ClientSearchRowOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ClientPublicHttpOpenApiDto"
+          },
+          "match": {
+            "$ref": "#/components/schemas/ClientSearchMatchOpenApiDto"
+          }
+        },
+        "required": [
+          "client",
+          "match"
+        ]
+      },
+      "ClientSearchListInnerOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClientSearchRowOpenApiDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaOpenApiDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ClientSearchListEnvelopeOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClientSearchListInnerOpenApiDto"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp",
+          "data"
+        ]
+      },
+      "ClientListInnerOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClientPublicHttpOpenApiDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaOpenApiDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ClientListEnvelopeOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClientListInnerOpenApiDto"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp",
+          "data"
+        ]
+      },
+      "ClientSingleEnvelopeOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClientPublicHttpOpenApiDto"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp",
+          "data"
+        ]
+      },
+      "CreateClientBodyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "cpf": {
+            "type": "string"
+          },
+          "cnpj": {
+            "type": "string"
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string",
+                "minLength": 1
+              },
+              "number": {
+                "type": "string",
+                "minLength": 1
+              },
+              "complement": {
+                "type": "string"
+              },
+              "neighborhood": {
+                "type": "string",
+                "minLength": 1
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "zipCode": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "street",
+              "number",
+              "neighborhood",
+              "city",
+              "state",
+              "zipCode"
+            ],
+            "x-nestjs_zod-self-required": true
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ]
+      },
+      "ClientContractPublicHttpOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contractNumber": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useClientAddress": {
+            "type": "boolean"
+          },
+          "address": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClientAddressOpenApiDto"
+              }
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "object",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "contractNumber",
+          "clientId",
+          "useClientAddress",
+          "address",
+          "startDate",
+          "endDate",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ClientContractListInnerOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClientContractPublicHttpOpenApiDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaOpenApiDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ClientContractListEnvelopeOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClientContractListInnerOpenApiDto"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp",
+          "data"
+        ]
+      },
+      "ClientContractSingleEnvelopeOpenApiDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ClientContractPublicHttpOpenApiDto"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp",
+          "data"
+        ]
+      },
+      "CreateClientContractBodyDto": {
+        "type": "object",
+        "properties": {
+          "contractNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "useClientAddress": {
+            "default": true,
+            "type": "boolean"
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string",
+                "minLength": 1
+              },
+              "number": {
+                "type": "string",
+                "minLength": 1
+              },
+              "complement": {
+                "type": "string"
+              },
+              "neighborhood": {
+                "type": "string",
+                "minLength": 1
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "zipCode": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "street",
+              "number",
+              "neighborhood",
+              "city",
+              "state",
+              "zipCode"
+            ],
+            "x-nestjs_zod-self-required": false
+          },
+          "startDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "endDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "required": [
+          "contractNumber",
+          "clientId",
+          "startDate"
+        ]
+      },
+      "UpdateClientContractBodyDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "EXPIRED",
+              "CANCELLED"
+            ],
+            "x-nestjs_zod-has-null": true
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "x-nestjs_zod-has-null": true,
+            "x-nestjs_zod-empty-type": true
+          },
+          "useClientAddress": {
+            "type": "boolean",
+            "x-nestjs_zod-has-null": true
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string",
+                "minLength": 1
+              },
+              "number": {
+                "type": "string",
+                "minLength": 1
+              },
+              "complement": {
+                "type": "string"
+              },
+              "neighborhood": {
+                "type": "string",
+                "minLength": 1
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "zipCode": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "street",
+              "number",
+              "neighborhood",
+              "city",
+              "state",
+              "zipCode"
+            ],
+            "x-nestjs_zod-has-null": true,
+            "x-nestjs_zod-self-required": false
+          }
+        }
       }
     }
   }

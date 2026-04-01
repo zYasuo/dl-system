@@ -1,19 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AFetchTicketsPage } from "@/features/tickets/actions";
+import { AFetchClientsPage } from "@/features/clients/actions";
 import { dashboardQueryKeys } from "./dashboard-query-keys";
 
 const PREVIEW_LIMIT = 8;
 
-/**
- * Lista curta dos tickets mais recentemente atualizados (para a visão geral).
- */
-export function useDashboardRecentTickets() {
+export function useDashboardRecentClients() {
   return useQuery({
-    queryKey: dashboardQueryKeys.recentTicketsPreview(),
+    queryKey: dashboardQueryKeys.recentClientsPreview(),
     queryFn: () =>
-      AFetchTicketsPage({
+      AFetchClientsPage({
         page: 1,
         limit: PREVIEW_LIMIT,
         sortBy: "updatedAt",

@@ -63,7 +63,7 @@ npm install
 npm run dev
 ```
 
-The app runs on **http://localhost:3001** so it does not clash with Nest on 3000. After sign-in, the default route is **`/dashboard`** (KPIs and charts). Ticket flows: `/tickets`, `/tickets/new`, `/tickets/[id]/edit`. The UI today focuses on **dashboard and tickets**; additional API modules can be wired in the app as needed.
+The app runs on **http://localhost:3001** so it does not clash with Nest on 3000. After sign-in, the default route is **`/dashboard`** (clientes, contratos, pesquisa e métricas). **Clientes:** `/dashboard/clients`, `/dashboard/clients/[id]`. **Chamados:** `/dashboard/tickets`, `/dashboard/tickets/new`, `/dashboard/tickets/[id]/edit`.
 
 - **`BACKEND_INTERNAL_URL`** — target for rewrites in `next.config.ts` (`/api/v1/*` → Nest), avoids browser CORS issues.
 - **`NEXT_PUBLIC_API_BASE_PATH`** — should be `/api/v1` to match the proxy.

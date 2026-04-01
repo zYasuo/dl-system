@@ -127,6 +127,86 @@ export interface paths {
         patch: operations["TicketController_update"];
         trace?: never;
     };
+    "/api/v1/clients/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientController_findAll"];
+        put?: never;
+        post: operations["ClientController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientController_findById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client-contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientContractController_findAll"];
+        put?: never;
+        post: operations["ClientContractController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client-contracts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientContractController_findById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ClientContractController_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -209,20 +289,139 @@ export interface components {
             timestamp: string;
             data: components["schemas"]["TicketListInnerOpenApiDto"];
         };
-        CreateTicketBodyDto: {
-            title: string;
-            description: string;
-        };
         TicketSingleEnvelopeOpenApiDto: {
             success: boolean;
             timestamp: string;
             data: components["schemas"]["TicketPublicHttpOpenApiDto"];
+        };
+        CreateTicketBodyDto: {
+            title: string;
+            description: string;
         };
         UpdateTicketBodyDto: {
             title: string;
             description: string;
             status: "OPEN" | "IN_PROGRESS" | "DONE";
             updatedAt: string;
+        };
+        ClientAddressOpenApiDto: {
+            street: string;
+            number: string;
+            complement?: string;
+            neighborhood: string;
+            city: string;
+            state: string;
+            zipCode: string;
+        };
+        ClientPublicHttpOpenApiDto: {
+            id: string;
+            name: string;
+            cpf: Record<string, never> | null;
+            cnpj: Record<string, never> | null;
+            address: components["schemas"]["ClientAddressOpenApiDto"];
+            createdAt: string;
+            updatedAt: string;
+        };
+        ClientSearchMatchOpenApiDto: {
+            kind: "cpf" | "id" | "address";
+            confidence: "exact" | "partial";
+        };
+        ClientSearchRowOpenApiDto: {
+            client: components["schemas"]["ClientPublicHttpOpenApiDto"];
+            match: components["schemas"]["ClientSearchMatchOpenApiDto"];
+        };
+        ClientSearchListInnerOpenApiDto: {
+            data: components["schemas"]["ClientSearchRowOpenApiDto"][];
+            meta: components["schemas"]["PaginationMetaOpenApiDto"];
+        };
+        ClientSearchListEnvelopeOpenApiDto: {
+            success: boolean;
+            timestamp: string;
+            data: components["schemas"]["ClientSearchListInnerOpenApiDto"];
+        };
+        ClientListInnerOpenApiDto: {
+            data: components["schemas"]["ClientPublicHttpOpenApiDto"][];
+            meta: components["schemas"]["PaginationMetaOpenApiDto"];
+        };
+        ClientListEnvelopeOpenApiDto: {
+            success: boolean;
+            timestamp: string;
+            data: components["schemas"]["ClientListInnerOpenApiDto"];
+        };
+        ClientSingleEnvelopeOpenApiDto: {
+            success: boolean;
+            timestamp: string;
+            data: components["schemas"]["ClientPublicHttpOpenApiDto"];
+        };
+        CreateClientBodyDto: {
+            name: string;
+            cpf?: string;
+            cnpj?: string;
+            address: {
+                street: string;
+                number: string;
+                complement?: string;
+                neighborhood: string;
+                city: string;
+                state: string;
+                zipCode: string;
+            };
+        };
+        ClientContractPublicHttpOpenApiDto: {
+            id: string;
+            contractNumber: string;
+            clientId: string;
+            useClientAddress: boolean;
+            address: components["schemas"]["ClientAddressOpenApiDto"] | null;
+            startDate: string;
+            endDate: Record<string, never> | null;
+            status: "ACTIVE" | "EXPIRED" | "CANCELLED";
+            createdAt: string;
+            updatedAt: string;
+        };
+        ClientContractListInnerOpenApiDto: {
+            data: components["schemas"]["ClientContractPublicHttpOpenApiDto"][];
+            meta: components["schemas"]["PaginationMetaOpenApiDto"];
+        };
+        ClientContractListEnvelopeOpenApiDto: {
+            success: boolean;
+            timestamp: string;
+            data: components["schemas"]["ClientContractListInnerOpenApiDto"];
+        };
+        ClientContractSingleEnvelopeOpenApiDto: {
+            success: boolean;
+            timestamp: string;
+            data: components["schemas"]["ClientContractPublicHttpOpenApiDto"];
+        };
+        CreateClientContractBodyDto: {
+            contractNumber: string;
+            clientId: string;
+            useClientAddress: boolean;
+            address?: {
+                street: string;
+                number: string;
+                complement?: string;
+                neighborhood: string;
+                city: string;
+                state: string;
+                zipCode: string;
+            };
+            startDate: string;
+            endDate?: string;
+        };
+        UpdateClientContractBodyDto: {
+            status?: "ACTIVE" | "EXPIRED" | "CANCELLED";
+            endDate?: string | null;
+            useClientAddress?: boolean;
+            address?: {
+                street: string;
+                number: string;
+                complement?: string;
+                neighborhood: string;
+                city: string;
+                state: string;
+                zipCode: string;
+            };
         };
     };
     responses: never;
@@ -675,6 +874,411 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientController_search: {
+        parameters: {
+            query: {
+                q: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientSearchListEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientController_findAll: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                cursor?: string;
+                sortBy?: "name" | "createdAt" | "updatedAt";
+                sortOrder?: "asc" | "desc";
+                name?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientListEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateClientBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientSingleEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientController_findById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientSingleEnvelopeOpenApiDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientContractController_findAll: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                cursor?: string;
+                sortBy?: "contractNumber" | "startDate" | "createdAt" | "updatedAt";
+                sortOrder?: "asc" | "desc";
+                clientId?: unknown;
+                status?: "ACTIVE" | "EXPIRED" | "CANCELLED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientContractListEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientContractController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateClientContractBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientContractSingleEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientContractController_findById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientContractSingleEnvelopeOpenApiDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    ClientContractController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClientContractBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientContractSingleEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

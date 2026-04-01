@@ -1,6 +1,8 @@
 # DL System — Frontend
 
-[Next.js](https://nextjs.org/) (App Router) app for **DL System** with [TanStack Query](https://tanstack.com/query), [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/), [shadcn/ui](https://ui.shadcn.com/), and a typed HTTP client via [openapi-fetch](https://github.com/drwpow/openapi-fetch) / [openapi-typescript](https://github.com/drwpow/openapi-typescript).
+[Next.js](https://nextjs.org/) (App Router) app for **DL System** with [TanStack Query](https://tanstack.com/query), [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/), [shadcn/ui](https://ui.shadcn.com/), and **TypeScript types** generated from the backend OpenAPI via [openapi-typescript](https://github.com/drwpow/openapi-typescript).
+
+As chamadas HTTP autenticadas usam **`fetch`** nas **server actions** ([`src/lib/api/backend-request.ts`](src/lib/api/backend-request.ts)) com `Authorization: Bearer …` a partir do cookie httpOnly do access token — não há `openapi-fetch` no `package.json`.
 
 ## Requirements
 
@@ -13,53 +15,98 @@
 cp .env.example .env.local
 ```
 
-- **`BACKEND_INTERNAL_URL`**: target for `next.config.ts` rewrites (`/api/v1/*` → Nest). Avoids browser CORS issues.
-- **`NEXT_PUBLIC_API_BASE_PATH`**: base path used by the client in the browser (should be `/api/v1` to match the proxy).
+| Variável | Função |
+|----------|--------|
+| **`BACKEND_INTERNAL_URL`** | URL base do Nest usada pelas server actions e por `next.config.ts` nos rewrites (`/api/v1/*` → backend). Predefinição típica: `http://localhost:3000`. |
+| **`NEXT_PUBLIC_API_BASE_PATH`** | Documentada para chamadas no browser via proxy; o fluxo atual do painel passa sobretudo por server actions e rewrites — não é referenciada em `src/` neste momento. |
 
-**Authentication:** users sign in against the backend (`POST /api/v1/auth/login`). The JWT access token is sent in the `Authorization: Bearer …` header for all protected API routes (e.g. tickets, clients, client-contracts). The refresh token is stored in an **httpOnly** cookie on path `/api/v1/auth`; calls to `refresh` / `logout` must use `credentials: 'include'` so the cookie is sent. Ticket ownership is inferred from the token — **do not** send `userId` in the body when creating a ticket.
+**Authentication:** `POST /api/v1/auth/login`. O access token vai no header **`Authorization: Bearer …`** nas rotas protegidas (tickets, **clients**, **client-contracts**). O refresh token fica em cookie **httpOnly** em `/api/v1/auth`; `refresh` / `logout` com `credentials: 'include'`. Ao criar um ticket, **não** envies `userId` no body.
 
 ## Development
 
-Terminal 1 — backend (Redis/Postgres per project setup):
+Terminal 1 — backend (Redis/Postgres conforme o projeto):
 
 ```bash
 cd ../backend
 npm run start:dev
 ```
 
-Terminal 2 — frontend on port **3001** (avoids clashing with Nest on 3000):
+Terminal 2 — frontend na porta **3001**:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001). After login, the default route is **`/dashboard`** (KPIs and charts). Authenticated app routes: `/dashboard`, `/tickets`, `/tickets/new`, `/tickets/[id]/edit` (the UI currently focuses on dashboard and tickets; other API modules can be integrated later).
+Abre [http://localhost:3001](http://localhost:3001). Após login, a rota por omissão é **`/dashboard`**.
 
-**Dashboard:** per-status totals come from `GET /api/v1/tickets?status=…&limit=1` (`meta.total`). The time-series chart aggregates recent tickets from the same API on the client (up to 100 per page); for full series, a dedicated metrics endpoint in the backend would be better (see `TODO` comments in `features/dashboard`).
+### Rotas autenticadas (UI)
+
+| Rota | Descrição |
+|------|-----------|
+| `/dashboard` | Visão geral: KPIs de clientes e contratos, gráficos, pesquisa de clientes, listas recentes |
+| `/dashboard/clients` | Lista paginada de clientes |
+| `/dashboard/clients/[id]` | Detalhe do cliente e contratos com `clientId` |
+| `/dashboard/tickets` | Lista de chamados |
+| `/dashboard/tickets/new` | Novo chamado |
+| `/dashboard/tickets/[id]/edit` | Editar chamado |
+
+### Fluxo do dashboard (clientes / contratos)
+
+1. **Métricas:** total de clientes (`GET /api/v1/clients?page=1&limit=1` → `meta.total`) e totais de contratos por estado com `GET /api/v1/client-contracts?status=ACTIVE|EXPIRED|CANCELLED&limit=1` (uma chamada por estado).
+2. **Gráficos:** amostra até 100 clientes (agregação por dia) e até 100 contratos (agregação por mês); cartões semicirculares usam a mesma amostra para indicar criações nos últimos 30 dias (percentagem dentro da amostra).
+3. **Pesquisa:** campo com debounce (~300 ms) que chama **`GET /api/v1/clients/search?q=…`** (`page`, `limit` opcionais). Resultados navegam para `/dashboard/clients/[id]`.
+4. **Detalhe:** `GET /api/v1/clients/:id` e contratos com `GET /api/v1/client-contracts?clientId=:id`.
+
+A UI do painel usa **cartões com cabeçalho destacado** (`DashboardInputCard`) e uma grelha de widgets (donut, barras horizontais, linhas, radiais, listas), sem alterar o tema global — só tokens existentes (`bg-card`, `bg-muted`, `--chart-*`).
+
+### Endpoints usados pelo frontend (integração)
+
+**Clients**
+
+| Método | Path | Query / notas |
+|--------|------|----------------|
+| GET | `/api/v1/clients/search` | `q` (obrigatório), `page`, `limit` |
+| GET | `/api/v1/clients` | `page`, `limit`, `cursor`, `sortBy` (`name` \| `createdAt` \| `updatedAt`), `sortOrder`, `name` (filtro) |
+| GET | `/api/v1/clients/:id` | — |
+| POST | `/api/v1/clients` | Corpo: ver schema `CreateClientBodyDto` no OpenAPI |
+
+**Client contracts**
+
+| Método | Path | Query / notas |
+|--------|------|----------------|
+| GET | `/api/v1/client-contracts` | `page`, `limit`, `cursor`, `sortBy`, `sortOrder`, `clientId`, `status` (`ACTIVE` \| `EXPIRED` \| `CANCELLED`) |
+| GET | `/api/v1/client-contracts/:id` | — |
+| POST | `/api/v1/client-contracts` | Corpo: `CreateClientContractBodyDto` |
+| PATCH | `/api/v1/client-contracts/:id` | Corpo: `UpdateClientContractBodyDto` |
+
+Respostas de sucesso seguem o envelope Nest: `{ success, timestamp, data }`; listas paginadas trazem `data: { data: [...], meta }`.
+
+### Modelos principais (UI)
+
+- **Cliente (`ClientPublicHttpOpenApiDto`):** `id`, `name`, `cpf`, `cnpj`, `address` (morada estruturada), `createdAt`, `updatedAt`.
+- **Linha de pesquisa (`ClientSearchRowOpenApiDto`):** `client` + `match` (`kind`: `cpf` \| `id` \| `address`, `confidence`: `exact` \| `partial`).
+- **Contrato (`ClientContractPublicHttpOpenApiDto`):** `id`, `contractNumber`, `clientId`, `useClientAddress`, `address`, `startDate`, `endDate`, `status`, `createdAt`, `updatedAt`.
 
 ## OpenAPI / types
 
-Types are generated in `src/lib/api/v1.d.ts` from the snapshot at `openapi/openapi.snapshot.json`.
+Tipos em [`src/lib/api/v1.d.ts`](src/lib/api/v1.d.ts) gerados a partir de [`openapi/openapi.snapshot.json`](openapi/openapi.snapshot.json).
 
-- Regenerate from the current snapshot:
+```bash
+npm run openapi:generate   # a partir do snapshot local
+npm run openapi:pull       # com o Nest a correr (default http://localhost:3000/docs-json)
+npm run openapi:generate
+```
 
-  ```bash
-  npm run openapi:generate
-  ```
-
-- Refresh the snapshot with the backend running:
-
-  ```bash
-  npm run openapi:pull
-  npm run openapi:generate
-  ```
+Opcional: `OPENAPI_URL` ao correr `openapi:pull`.
 
 ## Architecture (short)
 
-- **`src/features/dashboard`**: shell with sidebar (shadcn), `useDashboardStats`, overview page with charts (Recharts via `Chart`).
-- **`src/features/tickets`**: hooks (`useTicketsList`, `useCreateTicket`, …), Zod schemas, ticket UI.
-- **`src/lib/api`**: OpenAPI client, adapter helpers, and `ApiError` aligned with the Nest error envelope (`success: false`, `message`, …).
-- **`src/shared`**: shadcn UI and shared components (`PageHeader`, `EmptyState`, `ErrorAlert`).
+- **`src/features/dashboard`**: `DashboardShell`, sidebar, `useDashboardBusinessStats`, `DashboardInputCard`, `DashboardClientSearch`, donut/barras/linhas/radiais e listas recentes.
+- **`src/features/clients`**: server actions (`actions.ts`), hooks (`useClientsList`, `useClientDetail`, `useClientsSearch`), vistas de lista e detalhe.
+- **`src/features/client-contracts`**: actions e hooks (`useClientContractsList`, `useClientContractsByClient`, …).
+- **`src/features/tickets`**: hooks, schemas Zod, UI de chamados.
+- **`src/lib/api`**: `backendRequest`, `ApiError`, tipos OpenAPI.
+- **`src/shared`**: UI partilhada (`PageHeader`, `EmptyState`, `ErrorAlert`, `useDebouncedValue`).
 
-**Note:** there is no `GET /tickets/:id` in the backend. The edit page finds a ticket by scanning the paginated list (MVP).
+**Nota:** não existe `GET /tickets/:id` dedicado no backend. A página de edição localiza o ticket na lista paginada (MVP).

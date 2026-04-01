@@ -1,54 +1,36 @@
 "use client";
 
+import { DashboardInputCard } from "@/features/dashboard/components/dashboard-input-card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+
+export type DashboardKpiItem = {
+  title: string;
+  value: number;
+};
 
 type Props = {
-  total: number;
-  open: number;
-  inProgress: number;
-  done: number;
+  items: DashboardKpiItem[];
   isLoading: boolean;
 };
 
-export function DashboardKpiCards({
-  total,
-  open,
-  inProgress,
-  done,
-  isLoading,
-}: Props) {
-  const items = [
-    { title: "Total de tickets", value: total },
-    { title: "Abertos", value: open },
-    { title: "Em progresso", value: inProgress },
-    { title: "Concluídos", value: done },
-  ] as const;
-
+export function DashboardKpiCards({ items, isLoading }: Props) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (
-        <Card key={item.title} size="sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {item.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-9 w-20" aria-hidden />
-            ) : (
-              <p className="text-3xl font-semibold tabular-nums tracking-tight">
-                {item.value.toLocaleString("pt-PT")}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <DashboardInputCard
+          key={item.title}
+          title={item.title}
+          className="min-h-0"
+          contentClassName="justify-center py-4"
+        >
+          {isLoading ? (
+            <Skeleton className="h-9 w-24" aria-hidden />
+          ) : (
+            <p className="text-3xl font-semibold tabular-nums tracking-tight">
+              {item.value.toLocaleString("pt-PT")}
+            </p>
+          )}
+        </DashboardInputCard>
       ))}
     </div>
   );

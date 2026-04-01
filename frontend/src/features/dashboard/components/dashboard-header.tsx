@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment } from "react";
 import { LayoutDashboard, LogOut, Ticket } from "lucide-react";
@@ -19,18 +20,30 @@ import { Separator } from "@/shared/components/ui/separator";
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function segmentLabel(segment: string): string {
   if (segment === "dashboard") return "Visão geral";
+  if (segment === "clients") return "Clientes";
   if (segment === "tickets") return "Chamados";
   if (segment === "new") return "Novo";
   if (segment === "edit") return "Editar";
+  if (UUID_RE.test(segment)) return "Detalhe";
   return segment;
+}
+
+function hrefForSegments(endIndex: number, segments: string[]): string {
+  return `/${segments.slice(0, endIndex + 1).join("/")}`;
 }
 
 function initialsFromEmail(email: string): string {
   const c = email.trim().charAt(0);
   return c ? c.toUpperCase() : "?";
 }
+
+const crumbLinkClass =
+  "rounded-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export function DashboardHeader() {
   const pathname = usePathname();
@@ -50,29 +63,41 @@ export function DashboardHeader() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card/60 px-3 backdrop-blur-sm sm:px-4 md:px-5">
-      <SidebarTrigger className="-ml-1" aria-label="Abrir ou fechar menu lateral" />
-      <Separator orientation="vertical" className="mr-2 h-6" />
+      <SidebarTrigger className="-ml-1 shrink-0" aria-label="Abrir ou fechar menu lateral" />
+      <Separator orientation="vertical" className="mr-2 h-14 shrink-0" />
       <nav
         aria-label="Localização"
-        className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground"
+        className="flex min-w-0 flex-1 items-center gap-1.5 text-sm"
       >
-        <span className="font-medium text-foreground">Início</span>
-        {segments.map((seg, i) => (
-          <Fragment key={`${seg}-${i}`}>
-            <span aria-hidden className="text-muted-foreground/60">
-              /
-            </span>
-            <span
-              className={
-                i === segments.length - 1
-                  ? "truncate font-medium text-foreground"
-                  : "truncate"
-              }
-            >
-              {segmentLabel(seg)}
-            </span>
-          </Fragment>
-        ))}
+        <Link href="/dashboard" className={crumbLinkClass}>
+          Início
+        </Link>
+        {segments.map((seg, i) => {
+          const isLast = i === segments.length - 1;
+          const label = segmentLabel(seg);
+          return (
+            <Fragment key={`${seg}-${i}`}>
+              <span aria-hidden className="text-muted-foreground/50">
+                /
+              </span>
+              {isLast ? (
+                <span
+                  className="truncate font-medium text-foreground"
+                  aria-current="page"
+                >
+                  {label}
+                </span>
+              ) : (
+                <Link
+                  href={hrefForSegments(i, segments)}
+                  className={cn(crumbLinkClass, "truncate")}
+                >
+                  {label}
+                </Link>
+              )}
+            </Fragment>
+          );
+        })}
       </nav>
 
       <DropdownMenu>

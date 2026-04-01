@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Ticket } from "lucide-react";
+import { LogOut, Ticket, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import {
@@ -22,10 +22,10 @@ import {
 
 const nav = [
   {
-    title: "Visão geral",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    match: (path: string) => path === "/dashboard",
+    title: "Clientes",
+    href: "/dashboard/clients",
+    icon: Users,
+    match: (path: string) => path.startsWith("/dashboard/clients"),
   },
   {
     title: "Chamados",
@@ -74,7 +74,7 @@ export function AppSidebar() {
                 <Ticket className="size-4" aria-hidden />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">DL Tickets</span>
+                <span className="truncate font-semibold">DL System</span>
                 <span className="truncate text-xs text-sidebar-foreground/70">
                   Painel
                 </span>

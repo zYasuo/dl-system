@@ -1,64 +1,72 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
-import { useDashboardStats } from "@/features/dashboard/hooks/use-dashboard-stats";
+import { useDashboardBusinessStats } from "@/features/dashboard/hooks/use-dashboard-business-stats";
+import { DashboardActivityRadials } from "@/features/dashboard/components/dashboard-activity-radials";
+import { DashboardClientSearch } from "@/features/dashboard/components/dashboard-client-search";
+import { DashboardClientsLineChart } from "@/features/dashboard/components/dashboard-clients-line-chart";
+import { DashboardContractsDonutChart } from "@/features/dashboard/components/dashboard-contracts-donut-chart";
+import { DashboardContractsHorizontalBarChart } from "@/features/dashboard/components/dashboard-contracts-horizontal-bar-chart";
+import { DashboardContractsMonthlyLineChart } from "@/features/dashboard/components/dashboard-contracts-monthly-line-chart";
 import { DashboardKpiCards } from "@/features/dashboard/components/dashboard-kpi-cards";
-import { DashboardRecentTickets } from "@/features/dashboard/components/dashboard-recent-tickets";
-import { TicketsBarChart } from "@/features/dashboard/components/tickets-bar-chart";
-import { TicketsByStatusChart } from "@/features/dashboard/components/tickets-by-status-chart";
-import { TicketsTimelineChart } from "@/features/dashboard/components/tickets-timeline-chart";
-import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
-import { PageHeader } from "@/shared/components/page-header";
+import { DashboardRecentClients } from "@/features/dashboard/components/dashboard-recent-clients";
+import { DashboardRecentContracts } from "@/features/dashboard/components/dashboard-recent-contracts";
 
 export function DashboardOverview() {
   const {
-    total,
-    open,
-    inProgress,
-    done,
-    timeline,
+    totalClients,
+    activeContracts,
+    expiredContracts,
+    cancelledContracts,
+    clientsTimeline,
+    contractsMonthly,
+    clientsInLast30d,
+    clientsSampleSize,
+    contractsInLast30d,
+    contractsSampleSize,
     isLoading,
-    isError,
-  } = useDashboardStats();
+  } = useDashboardBusinessStats();
+
+  const kpiItems = [
+    { title: "Total de clientes", value: totalClients },
+    { title: "Contratos ativos", value: activeContracts },
+    { title: "Contratos expirados", value: expiredContracts },
+    { title: "Contratos cancelados", value: cancelledContracts },
+  ] as const;
 
   return (
-    <div className="flex w-full flex-col gap-5 px-3 py-4 sm:gap-6 sm:px-4 md:px-5">
-      <PageHeader
-        title="Visão geral"
-        description="Resumo dos seus tickets e tendências (dados da API com agregação no cliente onde aplicável)."
-      />
+    <div className="flex w-full flex-col gap-4 px-3 py-4 sm:gap-5 sm:px-4 md:px-5">
+      <DashboardClientSearch />
 
-      {isError ? (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" aria-hidden />
-          <AlertTitle>Erro ao carregar métricas</AlertTitle>
-          <AlertDescription>
-            Não foi possível obter os dados do painel. Verifique a sessão e se o
-            backend está a correr.
-          </AlertDescription>
-        </Alert>
-      ) : null}
+      <DashboardKpiCards items={[...kpiItems]} isLoading={isLoading} />
 
-      <DashboardKpiCards
-        total={total}
-        open={open}
-        inProgress={inProgress}
-        done={done}
-        isLoading={isLoading}
-      />
-
-      <DashboardRecentTickets />
-
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
-        <TicketsByStatusChart
-          open={open}
-          inProgress={inProgress}
-          done={done}
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+        <DashboardContractsDonutChart
+          active={activeContracts}
+          expired={expiredContracts}
+          cancelled={cancelledContracts}
         />
-        <TicketsBarChart open={open} inProgress={inProgress} done={done} />
+        <DashboardContractsHorizontalBarChart
+          active={activeContracts}
+          expired={expiredContracts}
+          cancelled={cancelledContracts}
+        />
+        <DashboardActivityRadials
+          clientsInLast30d={clientsInLast30d}
+          clientsSampleSize={clientsSampleSize}
+          contractsInLast30d={contractsInLast30d}
+          contractsSampleSize={contractsSampleSize}
+        />
       </div>
 
-      <TicketsTimelineChart data={timeline} />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <DashboardClientsLineChart data={clientsTimeline} />
+        <DashboardContractsMonthlyLineChart data={contractsMonthly} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <DashboardRecentClients />
+        <DashboardRecentContracts />
+      </div>
     </div>
   );
 }
