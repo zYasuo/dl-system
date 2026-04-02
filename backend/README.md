@@ -48,12 +48,12 @@ Bindings use **typed injection tokens** (`Symbol` / `InjectionToken`). Use cases
 
 | Location | Tokens (examples) |
 | -------- | ----------------- |
-| `src/modules/users/di.tokens.ts` | `USER_REPOSITORY`, `PASSWORD_HASHER` |
+| `src/modules/users/di.tokens.ts` | `USER_REPOSITORY`, `PASSWORD_HASHER`, `EMAIL_VERIFICATION_CHALLENGE_REPOSITORY`, `EMAIL_VERIFICATION_CODE_HASHER` |
 | `src/modules/auth/di.tokens.ts` | `REFRESH_TOKEN_REPOSITORY`, `PASSWORD_RESET_REPOSITORY`, `TOKEN_PROVIDER` |
 | `src/modules/tickets/di.tokens.ts` | `TICKET_REPOSITORY` |
 | `src/modules/clients/di.tokens.ts` | `CLIENT_REPOSITORY` |
 | `src/modules/client-contracts/di.tokens.ts` | `CLIENT_CONTRACT_REPOSITORY` |
-| `src/modules/notifications/di.tokens.ts` | `NOTIFICATION_REPOSITORY`, `NOTIFICATION_QUEUE_PORT` |
+| `src/modules/notifications/di.tokens.ts` | `NOTIFICATION_REPOSITORY`, `NOTIFICATION_QUEUE_PORT`, `EMAIL_SENDER_PORT` |
 | `src/modules/cache/di.tokens.ts` | `CACHE_PORT` — wired in `CacheModule` with `useExisting: CacheService` |
 | `src/common/rate-limit/di.tokens.ts` | `RATE_LIMIT_STORE` — wired in `RateLimitModule` with `useExisting: RateLimitRedisStore` |
 
@@ -65,7 +65,7 @@ All paths below use the **`/api/v1`** prefix.
 
 | Scope | Methods and paths |
 | ----- | ----------------- |
-| **Public** | `POST /users` · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/password-reset/request` · `POST /auth/password-reset/confirm` |
+| **Public** | `POST /users` · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/password-reset/request` · `POST /auth/password-reset/confirm` · `POST /auth/email/verify` · `POST /auth/email/resend` |
 | **JWT (Bearer)** | `GET`, `POST /tickets` · `GET`, `PATCH /tickets/:id` |
 | **JWT (Bearer)** | `GET`, `POST /clients` · `GET /clients/:id` |
 | **JWT (Bearer)** | `GET`, `POST /client-contracts` · `GET`, `PATCH /client-contracts/:id` |
@@ -78,7 +78,9 @@ All paths below use the **`/api/v1`** prefix.
 - **Refresh token:** opaque value in an **httpOnly** cookie (`Path=/api/v1/auth`). Use `POST /api/v1/auth/refresh` with `credentials: 'include'` from browsers; response sets a new cookie and returns a new `accessToken`.
 - **Logout:** `POST /api/v1/auth/logout` clears the refresh cookie and revokes the session server-side.
 - **Password reset:** `POST /api/v1/auth/password-reset/request` (always same success message) enqueues email; `POST /api/v1/auth/password-reset/confirm` with `token` + `newPassword`. Successful reset revokes all refresh tokens for that user.
-- **Protected routes:** global `JwtAuthGuard`; routes marked `@Public()` skip JWT (e.g. `POST /users`, `POST /auth/*`, password-reset).
+- **Email verification:** `POST /api/v1/users` creates an unverified user and enqueues a **6-digit OTP** (HTML email template + plain-text part; welcome + code in one message). `POST /api/v1/auth/email/verify` with `email` + `code` sets `emailVerifiedAt`. `POST /api/v1/auth/email/resend` always returns the same success-style message; it only sends when the account exists and is still unverified. **Login** returns **403** if the password is correct but the email is not verified yet.
+- **Transactional email (Resend):** set **`RESEND_API_KEY`** in production (see `.env.example`). Use **`EMAIL_FROM`** or **`RESEND_FROM_EMAIL`** for a verified sender; if unset, the app falls back to Resend’s onboarding address (fine for sandbox only). Without an API key in non-production, sends are skipped with a log warning (no HTTP call). Optional `OTP_PEPPER` strengthens stored OTP hashes. Outbound sends run in the **BullMQ** worker, not in the HTTP request.
+- **Protected routes:** global `JwtAuthGuard`; routes marked `@Public()` skip JWT (e.g. `POST /users`, `POST /auth/*`, password-reset, email verify/resend).
 - **Tickets, clients, client contracts:** `GET`/`POST` (and `PATCH` where applicable) under `/tickets`, `/clients`, and `/client-contracts` require a valid access token.
 - **Tickets:** the ticket **owner** is taken from the token — do **not** send `userId` in the body. Updates by a non-owner return **403**.
 
@@ -98,7 +100,7 @@ Public API responses use **uuid** strings as resource ids (users, tickets, clien
 npm install
 ```
 
-Set environment variables (see `.env.example`): at minimum `DATABASE_URL`, **`JWT_SECRET`**, Redis settings (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, etc.), optional `JWT_ACCESS_EXPIRATION_SECONDS` / `JWT_REFRESH_EXPIRATION_DAYS`, then run migrations:
+Set environment variables (see `.env.example`): at minimum `DATABASE_URL`, **`JWT_SECRET`**, Redis settings (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, etc.), optional `JWT_ACCESS_EXPIRATION_SECONDS` / `JWT_REFRESH_EXPIRATION_DAYS`. For real emails in production, set **`RESEND_API_KEY`** (and preferably **`EMAIL_FROM`** or **`RESEND_FROM_EMAIL`** for your domain). Then run migrations:
 
 ```bash
 npx prisma migrate dev
@@ -124,6 +126,13 @@ npm run load:race
 
 Configure with env vars: `BASE_URL`, and either **`ACCESS_TOKEN`** (JWT from login) or **`LOGIN_EMAIL`** + **`LOGIN_PASSWORD`**. Optional: `VUS`, `DURATION`, `PARALLEL`. See `load-testing/create-tickets.k6.js` and `load-testing/race-ticket-update.k6.js`.
 
+## Dependências, lockfile e auditoria
+
+- **Sempre commitar** `package-lock.json` junto com alterações a `package.json`. O CI e os deploys devem usar **`npm ci`** (instalação reprodutível a partir do lockfile; falha se lock e manifest estiverem dessincronizados).
+- **Auditoria local:** `npm audit` (árvore completa, inclui dev) e `npm audit --omit=dev` (foco no que acompanha dependências de produção). No CI corre-se `npm audit --omit=dev --audit-level=high` após `npm ci`.
+- **Triage (resumo):** alertas ligados ao **CLI Prisma** (`prisma` em dev), **Jest**, **Nest CLI** / **schematics** e **nestjs-prisma** (geração de código) são sobretudo **ferramentas de desenvolvimento** — não entram no bundle de runtime da API, mas convém mantê-los atualizados. Cadeias em **`@nestjs/core`**, **`@nestjs/platform-express`**, **`@nestjs/config`**, **`@nestjs/swagger`** / **`nestjs-zod`** podem afetar o **processo da API** em produção; corrigir com updates patch/minor dos pacotes Nest ou `overrides` pontuais (`lodash`, `path-to-regexp`, `picomatch` onde aplicável), evitando `npm audit fix --force` sem revisão. **Nota:** `ajv` em cadeia **nestjs-prisma** / **@schematics/angular** permanece com advisory **moderate** (ReDoS com `$data`); um override global de `ajv` quebra o **ESLint**; o gate do CI usa `--audit-level=high`, por isso moderate não bloqueia até haver correção upstream segura.
+- **Novas integrações:** quando possível, preferir **APIs nativas do Node** (por exemplo `fetch` em Node 18+) em vez de acrescentar pacotes só por conveniência.
+
 ## Scripts
 
 | Script | Description |
@@ -134,6 +143,8 @@ Configure with env vars: `BASE_URL`, and either **`ACCESS_TOKEN`** (JWT from log
 | `npm run test:e2e` | E2E tests (`test/*.e2e-spec.ts`) |
 | `npm run prisma:generate` | Generate Prisma client |
 | `npm run migrate:dev` | Run migrations (dev) |
+| `npm run audit:prod` | `npm audit --omit=dev` (dependências de produção) |
+| `npm run audit:ci` | Igual ao gate do CI: `--omit=dev --audit-level=high` |
 
 ## License
 

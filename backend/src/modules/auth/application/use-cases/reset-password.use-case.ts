@@ -4,9 +4,9 @@ import {
   REFRESH_TOKEN_REPOSITORY,
   TOKEN_PROVIDER,
 } from '../../di.tokens';
-import { PASSWORD_HASHER, USER_REPOSITORY } from 'src/modules/users/di.tokens';
+import { PASSWORD_HASHER, USER_CREDENTIAL_REPOSITORY } from 'src/modules/users/di.tokens';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
-import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
+import type { UserCredentialRepositoryPort } from 'src/modules/users/domain/ports/repository/user-credential.repository.port';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { PasswordResetRepositoryPort } from '../../domain/ports/repository/password-reset.repository.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
@@ -20,7 +20,8 @@ export class ResetPasswordUseCase {
     private readonly passwordResetRepository: PasswordResetRepositoryPort,
     @Inject(REFRESH_TOKEN_REPOSITORY)
     private readonly refreshTokenRepository: RefreshTokenRepositoryPort,
-    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
+    @Inject(USER_CREDENTIAL_REPOSITORY)
+    private readonly credentialRepository: UserCredentialRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasherPort,
   ) {}
 
@@ -42,7 +43,8 @@ export class ResetPasswordUseCase {
 
     const hashedPassword = await this.passwordHasher.hash(input.newPassword);
 
-    await this.userRepository.updatePassword(reset.userId, hashedPassword);
+    await this.credentialRepository.updatePasswordHash(reset.userId, hashedPassword);
+    await this.credentialRepository.clearLoginLockout(reset.userId);
     await this.passwordResetRepository.markAsUsed(reset.id);
     await this.refreshTokenRepository.revokeAllByUserId(reset.userId);
   }

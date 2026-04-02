@@ -159,6 +159,7 @@ describe('Tickets HTTP (e2e-style)', () => {
           useValue: {
             enqueueTicketCreated: jest.fn(),
             enqueuePasswordReset: jest.fn(),
+            enqueueEmailVerificationOtp: jest.fn(),
           },
         },
         {
@@ -170,7 +171,7 @@ describe('Tickets HTTP (e2e-style)', () => {
                   id: uuid,
                   name: 'E2E User',
                   email: 'e2e@example.com',
-                  password: 'hashed-password',
+                  emailVerifiedAt: new Date(),
                   createdAt: new Date(),
                   updatedAt: new Date(),
                 }),

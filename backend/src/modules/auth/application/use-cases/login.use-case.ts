@@ -1,34 +1,44 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from '../../di.tokens';
-import { PASSWORD_HASHER, USER_REPOSITORY } from 'src/modules/users/di.tokens';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import {
+  PASSWORD_HASHER,
+  USER_CREDENTIAL_REPOSITORY,
+  USER_REPOSITORY,
+} from 'src/modules/users/di.tokens';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
+import type { UserCredentialRepositoryPort } from 'src/modules/users/domain/ports/repository/user-credential.repository.port';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
-import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
-import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
-import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import type { LoginBody } from '../dto/login.dto';
 import { randomUUID } from 'node:crypto';
-import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
+import { SESSION_TOKEN_ISSUER } from '../../di.tokens';
+import type {
+  SessionTokenIssuerPort,
+  SessionTokens,
+} from '../../domain/ports/security/session-token-issuer.port';
 
 const DUMMY_HASH =
   '$argon2id$v=19$m=19456,t=2,p=4$JMdI74dxqkC6ES1zzlG+rQ$O2PXX5Ze/TEmBGUuBZn5rpPghLhuoDNZXurwGg+CtGU';
 const INVALID_CREDENTIALS_MSG = 'Invalid email or password';
+const ACCOUNT_LOCKED_MSG =
+  'Too many failed sign-in attempts. This account is temporarily locked. Try again in a few minutes.';
 
-export type LoginResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+export type LoginResult = SessionTokens;
 
 @Injectable()
 export class LoginUseCase {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
+    @Inject(USER_CREDENTIAL_REPOSITORY)
+    private readonly credentialRepository: UserCredentialRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasherPort,
-    @Inject(TOKEN_PROVIDER) private readonly tokenProvider: TokenProviderPort,
-    @Inject(REFRESH_TOKEN_REPOSITORY)
-    private readonly refreshTokenRepository: RefreshTokenRepositoryPort,
-    private readonly configService: ConfigService,
+    @Inject(SESSION_TOKEN_ISSUER)
+    private readonly sessionTokenIssuer: SessionTokenIssuerPort,
   ) {}
 
   async execute(input: LoginBody): Promise<LoginResult> {
@@ -39,37 +49,43 @@ export class LoginUseCase {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
     }
 
-    const passwordValid = await this.passwordHasher.compare(input.password, user.password.value);
+    const internalId = await this.userRepository.getInternalIdByUuid(user.id);
+    const credential = await this.credentialRepository.findByUserId(internalId);
 
-    if (!passwordValid) {
+    if (!credential) {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
     }
 
-    const internalId = await this.userRepository.getInternalIdByUuid(user.id);
+    const now = Date.now();
 
-    const accessToken = await this.tokenProvider.signAccessToken({
-      sub: user.id,
-      email: user.email.value,
-    });
+    if (credential.lockedUntil) {
+      if (credential.lockedUntil.getTime() > now) {
+        throw new HttpException(ACCOUNT_LOCKED_MSG, HttpStatus.TOO_MANY_REQUESTS);
+      }
+      await this.credentialRepository.clearLoginLockout(internalId);
+    }
 
-    const rawRefreshToken = this.tokenProvider.generateRefreshToken();
-    const tokenHash = this.tokenProvider.hashToken(rawRefreshToken);
-    const familyId = randomUUID();
-    const authConfig = this.configService.get<IAuthConfig>('auth')!;
-    const expiresAt = new Date(Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000);
-
-    await this.refreshTokenRepository.create(
-      RefreshTokenEntity.create({
-        id: 0,
-        tokenHash,
-        familyId,
-        userId: internalId,
-        expiresAt,
-        revokedAt: null,
-        createdAt: new Date(),
-      }),
+    const passwordValid = await this.passwordHasher.compare(
+      input.password,
+      credential.passwordHash,
     );
 
-    return { accessToken, refreshToken: rawRefreshToken };
+    if (!passwordValid) {
+      await this.credentialRepository.recordFailedLoginAttempt(internalId);
+      throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
+    }
+
+    await this.credentialRepository.clearLoginLockout(internalId);
+
+    if (!user.emailVerifiedAt) {
+      throw new ForbiddenException('Complete email verification before signing in');
+    }
+
+    return this.sessionTokenIssuer.issue({
+      userUuid: user.id,
+      email: user.email.value,
+      internalUserId: internalId,
+      familyId: randomUUID(),
+    });
   }
 }

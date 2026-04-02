@@ -5,9 +5,11 @@ import { NotificationJobName } from './notification-queue.adapter';
 import { SendNotificationUseCase } from 'src/modules/notifications/application/use-case/send-notification.use-case';
 import { SendPasswordResetEmailUseCase } from 'src/modules/notifications/application/use-case/send-password-reset-email.use-case';
 import type {
+  EnqueueEmailVerificationOtpPayload,
   EnqueueNotificationPayload,
   EnqueuePasswordResetPayload,
 } from 'src/modules/notifications/domain/ports/queue/notification-queue.port';
+import { SendOtpVerificationEmailUseCase } from 'src/modules/notifications/application/use-case/send-otp-verification-email.use-case';
 
 const QUEUE_NAME = 'notifications';
 
@@ -20,11 +22,16 @@ export class NotificationConsumer extends WorkerHost {
   constructor(
     private readonly sendNotificationUseCase: SendNotificationUseCase,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
+    private readonly sendOtpVerificationEmailUseCase: SendOtpVerificationEmailUseCase,
   ) {
     super();
   }
 
-  async process(job: Job<EnqueueNotificationPayload | EnqueuePasswordResetPayload>): Promise<void> {
+  async process(
+    job: Job<
+      EnqueueNotificationPayload | EnqueuePasswordResetPayload | EnqueueEmailVerificationOtpPayload
+    >,
+  ): Promise<void> {
     switch (job.name as NotificationJobName) {
       case NotificationJobName.TICKET_CREATED:
         await this.sendNotificationUseCase.execute(
@@ -36,6 +43,17 @@ export class NotificationConsumer extends WorkerHost {
         await this.sendPasswordResetEmailUseCase.execute({
           email: data.email,
           resetToken: data.resetToken,
+          expiresInMinutes: data.expiresInMinutes,
+        });
+        break;
+      }
+      case NotificationJobName.EMAIL_VERIFICATION_OTP: {
+        const data = job.data as EnqueueEmailVerificationOtpPayload;
+        await this.sendOtpVerificationEmailUseCase.execute({
+          to: data.to,
+          name: data.name,
+          code: data.code,
+          expiresInMinutes: data.expiresInMinutes,
         });
         break;
       }

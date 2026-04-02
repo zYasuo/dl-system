@@ -61,7 +61,7 @@ describe('UserController (integration)', () => {
         id,
         name: 'Carol',
         email: 'carol@example.com',
-        password: 'secret-hash-at-least-8',
+        emailVerifiedAt: null,
         createdAt: now,
         updatedAt: now,
       }),
@@ -81,6 +81,7 @@ describe('UserController (integration)', () => {
       id,
       name: 'Carol',
       email: 'carol@example.com',
+      emailVerified: false,
     });
     expect(typeof res.body.createdAt).toBe('string');
   });

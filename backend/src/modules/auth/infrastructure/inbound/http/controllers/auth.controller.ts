@@ -9,6 +9,8 @@ import { RefreshTokenUseCase } from 'src/modules/auth/application/use-cases/refr
 import { LogoutUseCase } from 'src/modules/auth/application/use-cases/logout.use-case';
 import { RequestPasswordResetUseCase } from 'src/modules/auth/application/use-cases/request-password-reset.use-case';
 import { ResetPasswordUseCase } from 'src/modules/auth/application/use-cases/reset-password.use-case';
+import { VerifyEmailOtpUseCase } from 'src/modules/auth/application/use-cases/verify-email-otp.use-case';
+import { ResendEmailVerificationUseCase } from 'src/modules/auth/application/use-cases/resend-email-verification.use-case';
 import { SLogin, type LoginBody } from 'src/modules/auth/application/dto/login.dto';
 import {
   SRequestPasswordReset,
@@ -18,6 +20,14 @@ import {
   SResetPassword,
   type ResetPasswordBody,
 } from 'src/modules/auth/application/dto/reset-password.dto';
+import {
+  SVerifyEmail,
+  type VerifyEmailBody,
+} from 'src/modules/auth/application/dto/verify-email.dto';
+import {
+  SResendEmailVerification,
+  type ResendEmailVerificationBody,
+} from 'src/modules/auth/application/dto/resend-email-verification.dto';
 import { ApiAuth, AuthDoc } from '../docs/auth-doc.decorator';
 import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
 import {
@@ -35,6 +45,8 @@ export class AuthController {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly requestPasswordResetUseCase: RequestPasswordResetUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly verifyEmailOtpUseCase: VerifyEmailOtpUseCase,
+    private readonly resendEmailVerificationUseCase: ResendEmailVerificationUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -103,5 +115,27 @@ export class AuthController {
   ): Promise<{ message: string }> {
     await this.resetPasswordUseCase.execute(dto);
     return { message: 'Password has been updated' };
+  }
+
+  @Public()
+  @RateLimitEndpoint('auth-email-verify')
+  @AuthDoc.EmailVerify()
+  @HttpCode(200)
+  async verifyEmail(
+    @Body(new ZodValidationPipe(SVerifyEmail)) dto: VerifyEmailBody,
+  ): Promise<{ message: string }> {
+    await this.verifyEmailOtpUseCase.execute(dto);
+    return { message: 'Email verified successfully' };
+  }
+
+  @Public()
+  @RateLimitEndpoint('auth-email-resend')
+  @AuthDoc.EmailResend()
+  @HttpCode(200)
+  async resendEmailVerification(
+    @Body(new ZodValidationPipe(SResendEmailVerification)) dto: ResendEmailVerificationBody,
+  ): Promise<{ message: string }> {
+    const message = await this.resendEmailVerificationUseCase.execute(dto);
+    return { message };
   }
 }

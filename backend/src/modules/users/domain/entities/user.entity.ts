@@ -1,21 +1,23 @@
 import { DomainError } from '../../../../common/errors/domain.error';
 import { Email } from '../vo/email.vo';
 import { Name } from '../vo/name.vo';
-import { Password } from '../vo/password.vo';
 
 export type UserEntityProps = {
   id: string;
   name: Name;
   email: Email;
-  password: Password;
+  emailVerifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type CreateUserEntityInput = Omit<UserEntityProps, 'email' | 'name' | 'password'> & {
+export type CreateUserEntityInput = Omit<
+  UserEntityProps,
+  'email' | 'name' | 'emailVerifiedAt'
+> & {
   name: string;
-  password: string;
   email: string;
+  emailVerifiedAt?: Date | null;
 };
 
 export class UserEntity {
@@ -33,8 +35,8 @@ export class UserEntity {
     return this.params.email;
   }
 
-  get password(): Password {
-    return this.params.password;
+  get emailVerifiedAt(): Date | null {
+    return this.params.emailVerifiedAt;
   }
 
   get createdAt(): Date {
@@ -52,13 +54,12 @@ export class UserEntity {
 
     const email = Email.create(input.email);
     const name = Name.create(input.name);
-    const password = Password.create(input.password);
 
     return new UserEntity({
       ...input,
       email,
       name,
-      password,
+      emailVerifiedAt: input.emailVerifiedAt ?? null,
     });
   }
 }

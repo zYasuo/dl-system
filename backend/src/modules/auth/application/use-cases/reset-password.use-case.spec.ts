@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
-import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
+import type { UserCredentialRepositoryPort } from 'src/modules/users/domain/ports/repository/user-credential.repository.port';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { PasswordResetRepositoryPort } from '../../domain/ports/repository/password-reset.repository.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
@@ -15,7 +15,10 @@ describe('ResetPasswordUseCase', () => {
     markAsUsed: jest.Mock;
   };
   let refreshTokenRepository: { revokeAllByUserId: jest.Mock };
-  let userRepository: { updatePassword: jest.Mock };
+  let credentialRepository: {
+    updatePasswordHash: jest.Mock;
+    clearLoginLockout: jest.Mock;
+  };
   let passwordHasher: { hash: jest.Mock };
 
   const future = new Date('2030-01-01T00:00:00.000Z');
@@ -31,14 +34,17 @@ describe('ResetPasswordUseCase', () => {
       markAsUsed: jest.fn(),
     };
     refreshTokenRepository = { revokeAllByUserId: jest.fn() };
-    userRepository = { updatePassword: jest.fn() };
+    credentialRepository = {
+      updatePasswordHash: jest.fn().mockResolvedValue(undefined),
+      clearLoginLockout: jest.fn().mockResolvedValue(undefined),
+    };
     passwordHasher = { hash: jest.fn().mockResolvedValue('new-hash') };
 
     useCase = new ResetPasswordUseCase(
       tokenProvider as unknown as TokenProviderPort,
       passwordResetRepository as unknown as PasswordResetRepositoryPort,
       refreshTokenRepository as unknown as RefreshTokenRepositoryPort,
-      userRepository as unknown as UserRepositoryPort,
+      credentialRepository as unknown as UserCredentialRepositoryPort,
       passwordHasher as unknown as PasswordHasherPort,
     );
   });
@@ -54,7 +60,7 @@ describe('ResetPasswordUseCase', () => {
       BadRequestException,
     );
 
-    expect(userRepository.updatePassword).not.toHaveBeenCalled();
+    expect(credentialRepository.updatePasswordHash).not.toHaveBeenCalled();
   });
 
   it('throws when token already used', async () => {
@@ -107,7 +113,8 @@ describe('ResetPasswordUseCase', () => {
 
     expect(tokenProvider.hashToken).toHaveBeenCalledWith('raw');
     expect(passwordHasher.hash).toHaveBeenCalledWith('newPassword12');
-    expect(userRepository.updatePassword).toHaveBeenCalledWith(99, 'new-hash');
+    expect(credentialRepository.updatePasswordHash).toHaveBeenCalledWith(99, 'new-hash');
+    expect(credentialRepository.clearLoginLockout).toHaveBeenCalledWith(99);
     expect(passwordResetRepository.markAsUsed).toHaveBeenCalledWith(7);
     expect(refreshTokenRepository.revokeAllByUserId).toHaveBeenCalledWith(99);
   });

@@ -1,28 +1,49 @@
-import { ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/repository/user.repository.port';
 import { PasswordHasherPort } from '../../domain/ports/security/password-hasher.port';
+import type { EmailVerificationChallengeRepositoryPort } from '../../domain/ports/repository/email-verification-challenge.repository.port';
+import type { EmailVerificationCodeHasherPort } from '../../domain/ports/security/email-verification-code-hasher.port';
+import type { NotificationQueuePort } from 'src/modules/notifications/domain/ports/queue/notification-queue.port';
 import { CreateUserUseCase } from './create-user.use-case';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
-  let userRepository: jest.Mocked<Pick<UserRepositoryPort, 'findByEmail' | 'create'>>;
+  let userRepository: jest.Mocked<Pick<UserRepositoryPort, 'findByEmail' | 'createWithCredential'>>;
   let passwordHasher: jest.Mocked<Pick<PasswordHasherPort, 'hash'>>;
+  let challengeRepository: jest.Mocked<
+    Pick<EmailVerificationChallengeRepositoryPort, 'deletePendingForUser' | 'create'>
+  >;
+  let codeHasher: jest.Mocked<Pick<EmailVerificationCodeHasherPort, 'hash'>>;
+  let notificationQueue: jest.Mocked<Pick<NotificationQueuePort, 'enqueueEmailVerificationOtp'>>;
 
   const now = new Date('2025-01-01T00:00:00.000Z');
 
   beforeEach(() => {
     userRepository = {
       findByEmail: jest.fn(),
-      create: jest.fn(),
+      createWithCredential: jest.fn(),
     };
     passwordHasher = {
       hash: jest.fn(),
     };
+    challengeRepository = {
+      deletePendingForUser: jest.fn().mockResolvedValue(undefined),
+      create: jest.fn().mockResolvedValue(undefined),
+    };
+    codeHasher = {
+      hash: jest.fn().mockReturnValue('code-hash-hex'),
+    };
+    notificationQueue = {
+      enqueueEmailVerificationOtp: jest.fn().mockResolvedValue(undefined),
+    };
     useCase = new CreateUserUseCase(
       userRepository as unknown as UserRepositoryPort,
       passwordHasher as unknown as PasswordHasherPort,
+      challengeRepository as unknown as EmailVerificationChallengeRepositoryPort,
+      codeHasher as unknown as EmailVerificationCodeHasherPort,
+      notificationQueue as unknown as NotificationQueuePort,
     );
   });
 
@@ -32,7 +53,6 @@ describe('CreateUserUseCase', () => {
         id: randomUUID(),
         name: 'Existing',
         email: 'a@b.com',
-        password: 'hashed-existing-password',
         createdAt: now,
         updatedAt: now,
       }),
@@ -47,10 +67,10 @@ describe('CreateUserUseCase', () => {
     ).rejects.toThrow(ConflictException);
 
     expect(passwordHasher.hash).not.toHaveBeenCalled();
-    expect(userRepository.create).not.toHaveBeenCalled();
+    expect(userRepository.createWithCredential).not.toHaveBeenCalled();
   });
 
-  it('hashes password then persists user', async () => {
+  it('hashes password then persists user and credential atomically', async () => {
     userRepository.findByEmail.mockResolvedValue(null);
     passwordHasher.hash.mockResolvedValue('argon2-hash-value');
 
@@ -58,11 +78,14 @@ describe('CreateUserUseCase', () => {
       id: 'user-id-1',
       name: 'Alice',
       email: 'alice@example.com',
-      password: 'argon2-hash-value',
+      emailVerifiedAt: null,
       createdAt: now,
       updatedAt: now,
     });
-    userRepository.create.mockResolvedValue(created);
+    userRepository.createWithCredential.mockResolvedValue({
+      user: created,
+      internalUserId: 42,
+    });
 
     const result = await useCase.execute({
       name: 'Alice',
@@ -71,16 +94,29 @@ describe('CreateUserUseCase', () => {
     });
 
     expect(passwordHasher.hash).toHaveBeenCalledWith('password12');
-    expect(userRepository.create).toHaveBeenCalled();
-    const arg = userRepository.create.mock.calls[0][0];
-    expect(arg.password.value).toBe('argon2-hash-value');
+    expect(userRepository.createWithCredential).toHaveBeenCalled();
+    const [userArg, hashArg] = userRepository.createWithCredential.mock.calls[0];
+    expect(hashArg).toBe('argon2-hash-value');
+    expect(userArg.email.value).toBe('alice@example.com');
+    expect(result.emailVerifiedAt).toBeNull();
     expect(result.email.value).toBe('alice@example.com');
+    expect(challengeRepository.deletePendingForUser).toHaveBeenCalledWith(42);
+    expect(challengeRepository.create).toHaveBeenCalled();
+    expect(codeHasher.hash).toHaveBeenCalled();
+    expect(notificationQueue.enqueueEmailVerificationOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-id-1',
+        to: 'alice@example.com',
+        name: 'Alice',
+        expiresInMinutes: 15,
+      }),
+    );
   });
 
-  it('throws InternalServerErrorException when repository returns null', async () => {
+  it('propagates when atomic user+credential persistence fails', async () => {
     userRepository.findByEmail.mockResolvedValue(null);
     passwordHasher.hash.mockResolvedValue('hashed-password-ok');
-    userRepository.create.mockResolvedValue(null as unknown as UserEntity);
+    userRepository.createWithCredential.mockRejectedValue(new Error('transaction failed'));
 
     await expect(
       useCase.execute({
@@ -88,6 +124,6 @@ describe('CreateUserUseCase', () => {
         email: 'bob@example.com',
         password: 'password12',
       }),
-    ).rejects.toThrow(InternalServerErrorException);
+    ).rejects.toThrow('transaction failed');
   });
 });

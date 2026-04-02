@@ -1,11 +1,11 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
 import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
+import type { SessionTokenIssuerPort } from '../../domain/ports/security/session-token-issuer.port';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 
 describe('RefreshTokenUseCase', () => {
@@ -22,7 +22,7 @@ describe('RefreshTokenUseCase', () => {
     create: jest.Mock;
   };
   let userRepository: { findByInternalId: jest.Mock };
-  let configService: { get: jest.Mock };
+  let sessionTokenIssuer: { issue: jest.Mock };
 
   const familyId = randomUUID();
   const userUuid = randomUUID();
@@ -42,15 +42,18 @@ describe('RefreshTokenUseCase', () => {
       create: jest.fn(),
     };
     userRepository = { findByInternalId: jest.fn() };
-    configService = {
-      get: jest.fn().mockReturnValue({ refreshExpirationDays: 7 }),
+    sessionTokenIssuer = {
+      issue: jest.fn().mockResolvedValue({
+        accessToken: 'new.access',
+        refreshToken: 'new-raw',
+      }),
     };
 
     useCase = new RefreshTokenUseCase(
       tokenProvider as unknown as TokenProviderPort,
       refreshTokenRepository as unknown as RefreshTokenRepositoryPort,
       userRepository as unknown as UserRepositoryPort,
-      configService as unknown as ConfigService,
+      sessionTokenIssuer as unknown as SessionTokenIssuerPort,
     );
   });
 
@@ -88,27 +91,28 @@ describe('RefreshTokenUseCase', () => {
       revokedAt: null,
       createdAt: now,
     });
-    tokenProvider.hashToken.mockReturnValueOnce('h').mockReturnValueOnce('h2');
+    tokenProvider.hashToken.mockReturnValueOnce('h');
     refreshTokenRepository.findByTokenHash.mockResolvedValue(stored);
     userRepository.findByInternalId.mockResolvedValue(
       UserEntity.create({
         id: userUuid,
         name: 'U',
         email: 'u@e.com',
-        password: 'password12',
         createdAt: now,
         updatedAt: now,
       }),
     );
-    tokenProvider.signAccessToken.mockResolvedValue('new.access');
-    tokenProvider.generateRefreshToken.mockReturnValue('new-raw');
-    refreshTokenRepository.create.mockResolvedValue({});
 
     const result = await useCase.execute('raw-token');
 
     expect(result.accessToken).toBe('new.access');
     expect(result.refreshToken).toBe('new-raw');
     expect(refreshTokenRepository.revokeById).toHaveBeenCalledWith(1);
-    expect(refreshTokenRepository.create).toHaveBeenCalled();
+    expect(sessionTokenIssuer.issue).toHaveBeenCalledWith({
+      userUuid,
+      email: 'u@e.com',
+      internalUserId: 1,
+      familyId,
+    });
   });
 });

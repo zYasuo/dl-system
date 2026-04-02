@@ -5,6 +5,7 @@ import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 import { RateLimitModule } from '../common/rate-limit/rate-limit.module';
 import { rateLimitConfig } from '../config/rate-limit.config';
 import { authConfig } from './auth/config/auth.config';
+import { emailConfig } from './notifications/config/email.config';
 import { UsersModule } from './users/users.module';
 import { TicketsModule } from './tickets/ticket.module';
 import { ClientsModule } from './clients/clients.module';
@@ -20,7 +21,7 @@ import { JwtAuthGuard } from './auth/infrastructure/inbound/http/guards/jwt-auth
     ConfigModule.forRoot({
       isGlobal: true,
       expandVariables: true,
-      load: [rateLimitConfig, authConfig],
+      load: [rateLimitConfig, authConfig, emailConfig],
     }),
     RateLimitModule,
     QueueModule,

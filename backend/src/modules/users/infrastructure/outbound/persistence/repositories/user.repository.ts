@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
+import {
+  UserRepositoryPort,
+  type CreateUserWithCredentialResult,
+} from 'src/modules/users/domain/ports/repository/user.repository.port';
 import { PrismaService } from 'nestjs-prisma';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 
@@ -15,7 +18,7 @@ export class UserRepository extends UserRepositoryPort {
         uuid: user.id,
         name: user.name.value,
         email: user.email.value,
-        password: user.password.value,
+        emailVerifiedAt: user.emailVerifiedAt,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -25,10 +28,49 @@ export class UserRepository extends UserRepositoryPort {
       id: row.uuid,
       name: row.name,
       email: row.email,
-      password: row.password,
+      emailVerifiedAt: row.emailVerifiedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
+  }
+
+  async createWithCredential(
+    user: UserEntity,
+    passwordHash: string,
+  ): Promise<CreateUserWithCredentialResult> {
+    const row = await this.prisma.$transaction(async (tx) => {
+      const u = await tx.user.create({
+        data: {
+          uuid: user.id,
+          name: user.name.value,
+          email: user.email.value,
+          emailVerifiedAt: user.emailVerifiedAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        },
+      });
+
+      await tx.userCredential.create({
+        data: {
+          userId: u.id,
+          passwordHash,
+        },
+      });
+
+      return u;
+    });
+
+    return {
+      internalUserId: row.id,
+      user: UserEntity.create({
+        id: row.uuid,
+        name: row.name,
+        email: row.email,
+        emailVerifiedAt: row.emailVerifiedAt,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      }),
+    };
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
@@ -42,7 +84,7 @@ export class UserRepository extends UserRepositoryPort {
       id: row.uuid,
       name: row.name,
       email: row.email,
-      password: row.password,
+      emailVerifiedAt: row.emailVerifiedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -59,7 +101,7 @@ export class UserRepository extends UserRepositoryPort {
       id: row.uuid,
       name: row.name,
       email: row.email,
-      password: row.password,
+      emailVerifiedAt: row.emailVerifiedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -76,7 +118,7 @@ export class UserRepository extends UserRepositoryPort {
       id: row.uuid,
       name: row.name,
       email: row.email,
-      password: row.password,
+      emailVerifiedAt: row.emailVerifiedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -95,10 +137,10 @@ export class UserRepository extends UserRepositoryPort {
     return row.id;
   }
 
-  async updatePassword(internalId: number, hashedPassword: string): Promise<void> {
+  async setEmailVerifiedAt(internalId: number, verifiedAt: Date): Promise<void> {
     await this.prisma.user.update({
       where: { id: internalId },
-      data: { password: hashedPassword },
+      data: { emailVerifiedAt: verifiedAt },
     });
   }
 }

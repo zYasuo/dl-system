@@ -2,6 +2,7 @@ import type { InjectionToken } from '@nestjs/common';
 import type { RefreshTokenRepositoryPort } from 'src/modules/auth/domain/ports/repository/refresh-token.repository.port';
 import type { PasswordResetRepositoryPort } from 'src/modules/auth/domain/ports/repository/password-reset.repository.port';
 import type { TokenProviderPort } from 'src/modules/auth/domain/ports/security/token-provider.port';
+import type { SessionTokenIssuerPort } from 'src/modules/auth/domain/ports/security/session-token-issuer.port';
 
 export const REFRESH_TOKEN_REPOSITORY: InjectionToken<RefreshTokenRepositoryPort> = Symbol(
   'REFRESH_TOKEN_REPOSITORY',
@@ -12,3 +13,7 @@ export const PASSWORD_RESET_REPOSITORY: InjectionToken<PasswordResetRepositoryPo
 );
 
 export const TOKEN_PROVIDER: InjectionToken<TokenProviderPort> = Symbol('TOKEN_PROVIDER');
+
+export const SESSION_TOKEN_ISSUER: InjectionToken<SessionTokenIssuerPort> = Symbol(
+  'SESSION_TOKEN_ISSUER',
+);

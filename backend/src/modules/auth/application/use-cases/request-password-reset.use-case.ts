@@ -49,6 +49,7 @@ export class RequestPasswordResetUseCase {
       userId: user.id,
       email: user.email.value,
       resetToken: rawToken,
+      expiresInMinutes: Math.floor(RESET_TOKEN_TTL_MS / 60_000),
     });
 
     return RESPONSE_MESSAGE;

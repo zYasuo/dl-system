@@ -64,9 +64,9 @@ describe('RequestPasswordResetUseCase', () => {
         id: userUuid,
         name: 'U',
         email: 'u@example.com',
-        password: 'hashedpass',
         createdAt: now,
         updatedAt: now,
+        emailVerifiedAt: null,
       }),
     );
     userRepository.getInternalIdByUuid.mockResolvedValue(42);
@@ -81,6 +81,7 @@ describe('RequestPasswordResetUseCase', () => {
       userId: userUuid,
       email: 'u@example.com',
       resetToken: 'plain-reset-token',
+      expiresInMinutes: 60,
     });
     // Return value must not expose the token
     expect(msg).not.toContain('plain-reset-token');

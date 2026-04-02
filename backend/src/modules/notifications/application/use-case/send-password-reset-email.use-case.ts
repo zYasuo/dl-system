@@ -1,14 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { EMAIL_SENDER_PORT } from '../../di.tokens';
+import type { EmailSenderPort } from '../../domain/ports/email/email-sender.port';
+import {
+  PASSWORD_RESET_EMAIL_SUBJECT,
+  buildPasswordResetEmailHtml,
+  buildPasswordResetEmailText,
+} from '../email-templates/password-reset-email.template';
 
 @Injectable()
 export class SendPasswordResetEmailUseCase {
-  private readonly logger = new Logger(SendPasswordResetEmailUseCase.name);
+  constructor(@Inject(EMAIL_SENDER_PORT) private readonly emailSender: EmailSenderPort) {}
 
-  execute(payload: { email: string; resetToken: string }): Promise<void> {
-    const subject = 'Password recovery — dl-tickets';
-    const body = `You requested a password reset. Use this link to set a new password (valid for 1 hour):\n\nReset token: ${payload.resetToken}\n\nIf you did not request this, you can ignore this email.`;
-
-    this.logger.log(`[Password reset email] to=${payload.email} subject="${subject}"\n${body}`);
-    return Promise.resolve();
+  async execute(payload: {
+    email: string;
+    resetToken: string;
+    expiresInMinutes: number;
+  }): Promise<void> {
+    const { resetToken, expiresInMinutes } = payload;
+    await this.emailSender.send({
+      to: payload.email,
+      subject: PASSWORD_RESET_EMAIL_SUBJECT,
+      html: buildPasswordResetEmailHtml({ resetToken, expiresInMinutes }),
+      text: buildPasswordResetEmailText({ resetToken, expiresInMinutes }),
+    });
   }
 }

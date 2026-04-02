@@ -58,7 +58,6 @@ describe('CreateTicketUseCase', () => {
         id: userId,
         name: 'Pat',
         email: 'pat@example.com',
-        password: 'hashed-password-ok',
         createdAt: now,
         updatedAt: now,
       }),

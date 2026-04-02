@@ -9,6 +9,11 @@ As chamadas HTTP autenticadas usam **`fetch`** nas **server actions** ([`src/lib
 - Node 20+
 - Nest backend from this repo (default `http://localhost:3000`, prefix `/api/v1`)
 
+## Dependências e CI
+
+- **Commitar** `package-lock.json` com qualquer alteração a `package.json`. Em CI/CD usar **`npm ci`** com este lockfile (instalação reprodutível; não usar `npm install` em pipelines).
+- Auditoria: `npm audit`; o CI corre `npm audit --audit-level=high` após `npm ci`.
+
 ## Setup
 
 ```bash

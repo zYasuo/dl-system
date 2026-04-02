@@ -1,17 +1,15 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { REFRESH_TOKEN_REPOSITORY, TOKEN_PROVIDER } from '../../di.tokens';
+import { REFRESH_TOKEN_REPOSITORY, SESSION_TOKEN_ISSUER, TOKEN_PROVIDER } from '../../di.tokens';
 import { USER_REPOSITORY } from 'src/modules/users/di.tokens';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
-import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
-import type { IAuthConfig } from 'src/modules/auth/config/auth.config';
+import type {
+  SessionTokenIssuerPort,
+  SessionTokens,
+} from '../../domain/ports/security/session-token-issuer.port';
 
-export type RefreshResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+export type RefreshResult = SessionTokens;
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -20,7 +18,8 @@ export class RefreshTokenUseCase {
     @Inject(REFRESH_TOKEN_REPOSITORY)
     private readonly refreshTokenRepository: RefreshTokenRepositoryPort,
     @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
-    private readonly configService: ConfigService,
+    @Inject(SESSION_TOKEN_ISSUER)
+    private readonly sessionTokenIssuer: SessionTokenIssuerPort,
   ) {}
 
   async execute(rawRefreshToken: string): Promise<RefreshResult> {
@@ -51,28 +50,11 @@ export class RefreshTokenUseCase {
       throw new UnauthorizedException();
     }
 
-    const accessToken = await this.tokenProvider.signAccessToken({
-      sub: user.id,
+    return this.sessionTokenIssuer.issue({
+      userUuid: user.id,
       email: user.email.value,
+      internalUserId: stored.userId,
+      familyId: stored.familyId,
     });
-
-    const newRawRefreshToken = this.tokenProvider.generateRefreshToken();
-    const newTokenHash = this.tokenProvider.hashToken(newRawRefreshToken);
-    const authConfig = this.configService.get<IAuthConfig>('auth')!;
-    const expiresAt = new Date(Date.now() + authConfig.refreshExpirationDays * 24 * 60 * 60 * 1000);
-
-    await this.refreshTokenRepository.create(
-      RefreshTokenEntity.create({
-        id: 0,
-        tokenHash: newTokenHash,
-        familyId: stored.familyId,
-        userId: stored.userId,
-        expiresAt,
-        revokedAt: null,
-        createdAt: new Date(),
-      }),
-    );
-
-    return { accessToken, refreshToken: newRawRefreshToken };
   }
 }

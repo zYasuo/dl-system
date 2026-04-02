@@ -4,6 +4,8 @@ import { standardError } from 'src/common/openapi/standard-error-doc.helper';
 import { LoginBodyDto } from 'src/modules/auth/application/dto/login.dto';
 import { RequestPasswordResetBodyDto } from 'src/modules/auth/application/dto/request-password-reset.dto';
 import { ResetPasswordBodyDto } from 'src/modules/auth/application/dto/reset-password.dto';
+import { VerifyEmailBodyDto } from 'src/modules/auth/application/dto/verify-email.dto';
+import { ResendEmailVerificationBodyDto } from 'src/modules/auth/application/dto/resend-email-verification.dto';
 import {
   LoginEnvelopeOpenApiDto,
   MessageEnvelopeOpenApiDto,
@@ -27,6 +29,7 @@ export class AuthDoc {
       }),
       standardError(400, 'Validation'),
       standardError(401, 'Invalid email or password'),
+      standardError(403, 'Email not verified'),
       standardError(429, 'Rate limit'),
     );
   }
@@ -84,6 +87,36 @@ export class AuthDoc {
         type: MessageEnvelopeOpenApiDto,
       }),
       standardError(400, 'Invalid or expired token'),
+      standardError(429, 'Rate limit'),
+    );
+  }
+
+  static EmailVerify() {
+    return applyDecorators(
+      Post('email/verify'),
+      ApiOperation({ summary: 'Verify email with 6-digit OTP' }),
+      ApiBody({ type: VerifyEmailBodyDto }),
+      ApiResponse({
+        status: 200,
+        description: 'Email verified.',
+        type: MessageEnvelopeOpenApiDto,
+      }),
+      standardError(400, 'Validation or verification failed'),
+      standardError(429, 'Rate limit'),
+    );
+  }
+
+  static EmailResend() {
+    return applyDecorators(
+      Post('email/resend'),
+      ApiOperation({ summary: 'Resend email verification code' }),
+      ApiBody({ type: ResendEmailVerificationBodyDto }),
+      ApiResponse({
+        status: 200,
+        description: 'Same message whether or not the email is eligible.',
+        type: MessageEnvelopeOpenApiDto,
+      }),
+      standardError(400, 'Validation'),
       standardError(429, 'Rate limit'),
     );
   }
