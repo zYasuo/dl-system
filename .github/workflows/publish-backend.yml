@@ -1,0 +1,67 @@
+name: Publish backend image
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - name: Publish only when backend or Docker/CI workflows changed
+        id: paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
+            echo "has_backend_changes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only HEAD^ HEAD | grep -qE '^backend/|^\.github/workflows/publish-backend\.yml|^\.github/workflows/ci\.yml'; then
+            echo "has_backend_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_backend_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Image name (GHCR requires lowercase)
+        id: image
+        if: steps.paths.outputs.has_backend_changes == 'true'
+        run: |
+          echo "full=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')/backend" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.paths.outputs.has_backend_changes == 'true'
+
+      - uses: docker/login-action@v3
+        if: steps.paths.outputs.has_backend_changes == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        if: steps.paths.outputs.has_backend_changes == 'true'
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.full }}:latest
+            ${{ steps.image.outputs.full }}:${{ github.event.workflow_run.head_sha }}
+            ${{ steps.image.outputs.full }}:${{ github.event.workflow_run.head_branch }}

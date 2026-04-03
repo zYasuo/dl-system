@@ -11,6 +11,7 @@ import { CreateClientContractUseCase } from 'src/modules/client-contracts/applic
 import { ClientContractsModule } from 'src/modules/client-contracts/client-contracts.module';
 import type { CreateClientBody } from 'src/modules/clients/application/dto/create-client.dto';
 import { UsersModule } from 'src/modules/users/users.module';
+import { QueueModule } from 'src/modules/queue/queue';
 
 const integrationAddress: CreateClientBody['address'] = {
   street: 'Rua X',
@@ -41,6 +42,7 @@ const runIntegration = process.env.RUN_INTEGRATION_TESTS === '1';
     moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, expandVariables: true }),
+        QueueModule,
         UsersModule,
         ClientsModule,
         ClientContractsModule,

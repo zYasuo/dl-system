@@ -1,22 +1,28 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
-# Create app directory
 WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
+RUN npm prune --omit=dev
 
-FROM node:16
+FROM node:22-alpine AS runner
 
-COPY --from=builder /app/node_modules ./node_modules
+WORKDIR /app
+
+ENV NODE_ENV=production
+
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma/
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
-CMD [ "npm", "run", "start:prod" ]
+
+CMD ["node", "dist/main.js"]

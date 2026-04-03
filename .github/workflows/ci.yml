@@ -24,12 +24,39 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+      REDIS_HOST: localhost
+      REDIS_PORT: "6379"
+      JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,13 +65,125 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - name: Wait for Postgres (pg_isready)
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y postgresql-client
+          until pg_isready -h localhost -p 5432 -U ci -d ci; do sleep 1; done
+      - name: Wait for Redis (TCP)
+        shell: bash
+        run: |
+          for _ in $(seq 1 30); do
+            if timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/6379' 2>/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Redis not ready" && exit 1
+      - run: npm run migrate:deploy
+      - run: npm run lint:ci
       - name: npm audit (production, high+)
         run: npm run audit:ci
-      - run: npm run lint:ci
       - run: npm run build
-      - run: npm run test
+      - run: npm run test:cov
+      - name: Integration tests (real DB)
+        run: npm run test:integration -- --runInBand
+        env:
+          RUN_INTEGRATION_TESTS: "1"
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-node-22.12
+          path: backend/coverage
+          if-no-files-found: error
+
+  # Node 20 LTS em paralelo; o workflow só fica verde se ambos passarem.
+  backend-node20:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+      REDIS_HOST: localhost
+      REDIS_PORT: "6379"
+      JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Wait for Postgres (pg_isready)
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y postgresql-client
+          until pg_isready -h localhost -p 5432 -U ci -d ci; do sleep 1; done
+      - name: Wait for Redis (TCP)
+        shell: bash
+        run: |
+          for _ in $(seq 1 30); do
+            if timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/6379' 2>/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Redis not ready" && exit 1
+      - run: npm run migrate:deploy
+      - run: npm run lint:ci
+      - name: npm audit (production, high+)
+        run: npm run audit:ci
+      - run: npm run build
+      - run: npm run test:cov
+      - name: Integration tests (real DB)
+        run: npm run test:integration -- --runInBand
+        env:
+          RUN_INTEGRATION_TESTS: "1"
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-node-20.19
+          path: backend/coverage
+          if-no-files-found: error
+
+  docker-backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t dl-tickets-backend:ci -f backend/Dockerfile backend
 
   frontend:
+    needs: backend
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
@@ -54,6 +193,12 @@ jobs:
       BACKEND_INTERNAL_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: ${{ runner.os }}-next-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12"
@@ -64,21 +209,3 @@ jobs:
         run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm run build
-
-  backend-e2e:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: backend
-    env:
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.12"
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - run: npm run test:e2e
