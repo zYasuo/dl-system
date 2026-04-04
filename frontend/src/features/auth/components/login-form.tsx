@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/components/auth-provider";
@@ -34,6 +34,13 @@ export function LoginForm() {
     resolver: zodResolver(SLogin),
     defaultValues: { email: "", password: "" },
   });
+
+  const emailParam = searchParams.get("email");
+  useEffect(() => {
+    if (emailParam) {
+      form.setValue("email", emailParam);
+    }
+  }, [emailParam, form.setValue]);
 
   const next = searchParams.get("next") ?? "/dashboard";
 

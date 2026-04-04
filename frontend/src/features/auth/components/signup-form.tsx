@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ARegisterUser } from "@/features/auth/actions";
-import { useAuth } from "@/features/auth/components/auth-provider";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import {
@@ -27,7 +26,6 @@ import { Input } from "@/shared/components/ui/input";
 
 export function SignupForm() {
   const router = useRouter();
-  const { login } = useAuth();
   const [submitError, setSubmitError] = useState<unknown>(null);
 
   const form = useForm<SignupFormValues>({
@@ -74,16 +72,12 @@ export function SignupForm() {
               email: values.email,
               password: values.password,
             });
-            try {
-              await login(values.email, values.password);
-              toast.success("Conta criada. Bem-vindo(a)!");
-              router.replace("/dashboard");
-            } catch {
-              toast.error(
-                "Conta criada, mas o início de sessão falhou. Entra manualmente.",
-              );
-              router.replace("/login");
-            }
+            toast.success(
+              "Conta criada. Verifica o teu email para ativares a conta; depois podes iniciar sessão aqui.",
+            );
+            router.replace(
+              `/login?email=${encodeURIComponent(values.email)}`,
+            );
           } catch (e) {
             setSubmitError(e);
           }
