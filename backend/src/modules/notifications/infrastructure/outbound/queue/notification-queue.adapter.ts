@@ -56,7 +56,7 @@ export class NotificationQueueAdapter extends NotificationQueuePort {
       backoff: { type: 'exponential', delay: 1000 },
       removeOnComplete: true,
       removeOnFail: false,
-      jobId: `email-verification:${payload.challengeUuid}`,
+      jobId: `email-verification-${payload.challengeUuid}`,
     });
 
     this.logger.log(

@@ -73,10 +73,10 @@ export function SignupForm() {
               password: values.password,
             });
             toast.success(
-              "Conta criada. Verifica o teu email para ativares a conta; depois podes iniciar sessão aqui.",
+              "Conta criada. Enviámos um código de 6 dígitos para o teu email.",
             );
             router.replace(
-              `/login?email=${encodeURIComponent(values.email)}`,
+              `/verify-email?email=${encodeURIComponent(values.email)}`,
             );
           } catch (e) {
             setSubmitError(e);

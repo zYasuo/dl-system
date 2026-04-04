@@ -139,3 +139,46 @@ export async function AConfirmPasswordReset(
   }
   return envelope.data.message;
 }
+
+export async function AVerifyEmail(
+  email: string,
+  code: string,
+): Promise<string> {
+  const res = await backendRequest("/api/v1/auth/email/verify", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+  });
+  const data: unknown = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw ApiError.fromUnknown(data, res.status);
+  }
+  const envelope = data as {
+    success?: boolean;
+    data?: { message?: string };
+  };
+  if (envelope?.success !== true || !envelope.data?.message) {
+    throw ApiError.fromUnknown(data, res.status);
+  }
+  return envelope.data.message;
+}
+
+export async function AResendEmailVerification(
+  email: string,
+): Promise<string> {
+  const res = await backendRequest("/api/v1/auth/email/resend", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  const data: unknown = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw ApiError.fromUnknown(data, res.status);
+  }
+  const envelope = data as {
+    success?: boolean;
+    data?: { message?: string };
+  };
+  if (envelope?.success !== true || !envelope.data?.message) {
+    throw ApiError.fromUnknown(data, res.status);
+  }
+  return envelope.data.message;
+}
