@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { AuthCard } from "@/features/auth/components/auth-card";
+import { AuthScreenHeader } from "@/features/auth/components/auth-screen-header";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import {
   SLogin,
@@ -18,10 +19,6 @@ import { ErrorAlert } from "@/shared/components/error-alert";
 import { FormField } from "@/shared/components/form-field";
 import { PasswordInput } from "@/shared/components/password-input";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
-import {
-  CardDescription,
-  CardTitle,
-} from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 
 export function LoginForm() {
@@ -47,12 +44,10 @@ export function LoginForm() {
   return (
     <AuthCard
       header={
-        <>
-          <CardTitle className="text-xl font-semibold">Entrar</CardTitle>
-          <CardDescription>
-            Insere as tuas credenciais para continuar
-          </CardDescription>
-        </>
+        <AuthScreenHeader
+          title="Entrar"
+          description="Usa o teu email e password para aceder ao painel."
+        />
       }
       footer={
         <p className="text-center text-sm text-muted-foreground">
@@ -69,7 +64,7 @@ export function LoginForm() {
       }
     >
       <form
-        className="space-y-4"
+        className="space-y-5"
         onSubmit={form.handleSubmit(async (values) => {
           setSubmitError(null);
           try {
@@ -94,40 +89,40 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             autoFocus
+            className="h-10"
             {...form.register("email")}
           />
         </FormField>
 
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
+        <FormField
+          label="Password"
+          htmlFor="password"
+          required
+          error={form.formState.errors.password?.message}
+          labelTrailing={
             <Link
               href="/forgot-password"
               className={cn(
                 buttonVariants({
                   variant: "link",
                   size: "sm",
-                  className: "h-auto p-0 text-xs text-muted-foreground",
+                  className:
+                    "h-auto shrink-0 p-0 text-xs font-normal text-muted-foreground underline-offset-4 hover:text-foreground",
                 }),
               )}
             >
               Esqueci a password
             </Link>
-          </div>
+          }
+        >
           <PasswordInput
             id="password"
             autoComplete="current-password"
+            className="h-10"
             aria-invalid={!!form.formState.errors.password}
             {...form.register("password")}
           />
-          {form.formState.errors.password?.message ? (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.password.message}
-            </p>
-          ) : null}
-        </div>
+        </FormField>
 
         <AuthSubmitButton
           pending={form.formState.isSubmitting}

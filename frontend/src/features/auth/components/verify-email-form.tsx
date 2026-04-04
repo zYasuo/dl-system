@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ import {
   AVerifyEmail,
 } from "@/features/auth/actions";
 import { AuthCard } from "@/features/auth/components/auth-card";
+import { AuthScreenHeader } from "@/features/auth/components/auth-screen-header";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import {
   SVerifyEmail,
@@ -23,12 +25,9 @@ import { FormField } from "@/shared/components/form-field";
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import {
-  CardDescription,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import {
   InputOTP,
   InputOTPGroup,
+  InputOTPSeparator,
   InputOTPSlot,
 } from "@/shared/components/ui/input-otp";
 
@@ -55,18 +54,13 @@ export function VerifyEmailForm() {
     return (
       <AuthCard
         header={
-          <>
-            <CardTitle className="text-xl font-semibold">
-              Verificar email
-            </CardTitle>
-            <CardDescription>
-              Falta o email na ligação. Regista-te de novo ou inicia sessão se
-              já tiveres conta.
-            </CardDescription>
-          </>
+          <AuthScreenHeader
+            title="Verificar email"
+            description="Esta página precisa do email na ligação. Regista-te de novo ou inicia sessão se já tiveres conta."
+          />
         }
         footer={
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
             <Link
               href="/signup"
               className={cn(buttonVariants({ className: "w-full sm:w-auto" }))}
@@ -93,15 +87,23 @@ export function VerifyEmailForm() {
   return (
     <AuthCard
       header={
-        <>
-          <CardTitle className="text-xl font-semibold">
-            Verificar email
-          </CardTitle>
-          <CardDescription>
-            Introduz o código de 6 dígitos que enviámos para{" "}
-            <span className="font-medium text-foreground">{emailParam}</span>.
-          </CardDescription>
-        </>
+        <AuthScreenHeader
+          title="Confirma o teu email"
+          description={
+            <>
+              Introduz o código de 6 dígitos que enviámos para{" "}
+              <span className="break-all font-mono text-[0.8125rem] font-medium text-foreground">
+                {emailParam}
+              </span>
+              .
+            </>
+          }
+          adornment={
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/25">
+              <Mail className="size-6" aria-hidden />
+            </span>
+          }
+        />
       }
       footer={
         <p className="text-center text-sm text-muted-foreground">
@@ -118,7 +120,7 @@ export function VerifyEmailForm() {
       }
     >
       <form
-        className="space-y-4"
+        className="space-y-6"
         onSubmit={form.handleSubmit(async (values) => {
           setSubmitError(null);
           try {
@@ -137,7 +139,7 @@ export function VerifyEmailForm() {
         <input type="hidden" {...form.register("email")} />
 
         <FormField
-          label="Código"
+          label="Código de verificação"
           htmlFor="code"
           required
           error={form.formState.errors.code?.message}
@@ -158,28 +160,34 @@ export function VerifyEmailForm() {
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                containerClassName="flex w-full flex-wrap items-center justify-center gap-2 sm:justify-start"
               >
-                <InputOTPGroup className="w-full justify-center">
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <InputOTPSlot key={i} index={i} />
-                  ))}
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                </InputOTPGroup>
+                <InputOTPSeparator />
+                <InputOTPGroup>
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
                 </InputOTPGroup>
               </InputOTP>
             )}
           />
         </FormField>
 
-        <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 pt-1">
           <AuthSubmitButton
-            className="w-full sm:w-auto sm:min-w-[140px]"
             pending={form.formState.isSubmitting}
-            idleLabel="Confirmar"
+            idleLabel="Confirmar e continuar"
             pendingLabel="A confirmar…"
           />
           <Button
             type="button"
             variant="outline"
-            className="w-full sm:w-auto"
+            className="w-full"
             disabled={resendPending}
             onClick={async () => {
               setResendPending(true);

@@ -11,12 +11,14 @@ export function AuthBrandMark({ href, className }: AuthBrandMarkProps) {
   const inner = (
     <div
       className={cn(
-        "flex items-center justify-center gap-2 text-muted-foreground",
+        "flex items-center gap-2.5 text-muted-foreground transition-colors",
         className,
       )}
     >
-      <Ticket className="size-5" aria-hidden />
-      <span className="text-lg font-semibold tracking-tight text-foreground">
+      <span className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/20">
+        <Ticket className="size-[1.125rem]" aria-hidden />
+      </span>
+      <span className="text-xl font-semibold tracking-tight text-foreground">
         DL Tickets
       </span>
     </div>
@@ -24,7 +26,10 @@ export function AuthBrandMark({ href, className }: AuthBrandMarkProps) {
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex justify-center hover:text-primary">
+      <Link
+        href={href}
+        className="inline-flex rounded-xl outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
         {inner}
       </Link>
     );

@@ -26,10 +26,7 @@ function InputOTP({
 
 function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("flex items-center rounded-lg shadow-sm", className)}
-      {...props}
-    />
+    <div className={cn("flex items-center rounded-lg", className)} {...props} />
   );
 }
 
@@ -49,7 +46,7 @@ function InputOTPSlot({
       className={cn(
         "relative z-0 flex h-10 w-9 shrink-0 items-center justify-center border-y border-r border-input bg-transparent text-sm font-mono tabular-nums transition-[color,box-shadow] first:rounded-l-lg first:border-l last:rounded-r-lg md:h-8 md:w-8 not-first:-ml-px",
         "dark:bg-input/30",
-        isActive && "z-1 border-ring ring-2 ring-ring/50",
+        isActive && "z-10 border-ring ring-2 ring-ring/50",
         className,
       )}
       {...props}
@@ -71,10 +68,11 @@ function InputOTPSeparator({
   return (
     <div
       role="separator"
-      className={cn("flex items-center px-0.5", className)}
+      aria-hidden
+      className={cn("flex h-10 items-center px-1 md:h-8", className)}
       {...props}
     >
-      <div className="size-1 rounded-full bg-border" />
+      <div className="h-px w-4 rounded-full bg-muted-foreground/35 md:w-3" />
     </div>
   );
 }
