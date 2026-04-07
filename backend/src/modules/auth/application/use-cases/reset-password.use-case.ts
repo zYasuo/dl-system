@@ -1,4 +1,5 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import {
   PASSWORD_RESET_REPOSITORY,
   REFRESH_TOKEN_REPOSITORY,
@@ -11,6 +12,9 @@ import type { TokenProviderPort } from '../../domain/ports/security/token-provid
 import type { PasswordResetRepositoryPort } from '../../domain/ports/repository/password-reset.repository.port';
 import type { RefreshTokenRepositoryPort } from '../../domain/ports/repository/refresh-token.repository.port';
 import type { ResetPasswordBody } from '../dto/reset-password.dto';
+import { AUTH_API_ERROR_CODES } from '../errors';
+
+const INVALID_RESET_TOKEN_MSG = 'Invalid or expired reset token';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -30,15 +34,15 @@ export class ResetPasswordUseCase {
     const reset = await this.passwordResetRepository.findByTokenHash(tokenHash);
 
     if (!reset) {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new ApplicationException(AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN, INVALID_RESET_TOKEN_MSG);
     }
 
     if (reset.isUsed) {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new ApplicationException(AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN, INVALID_RESET_TOKEN_MSG);
     }
 
     if (reset.isExpired) {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new ApplicationException(AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN, INVALID_RESET_TOKEN_MSG);
     }
 
     const hashedPassword = await this.passwordHasher.hash(input.newPassword);

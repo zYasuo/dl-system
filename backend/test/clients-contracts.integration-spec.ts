@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { CLIENT_API_ERROR_CODES } from 'src/modules/clients/application/errors';
+import { CONTRACT_API_ERROR_CODES } from 'src/modules/client-contracts/application/errors';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { execSync } from 'node:child_process';
@@ -78,7 +79,7 @@ const runIntegration = process.env.RUN_INTEGRATION_TESTS === '1';
         address: integrationAddress,
         isForeignNational: false,
       }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).rejects.toMatchObject({ code: CLIENT_API_ERROR_CODES.CPF_ALREADY_REGISTERED });
   });
 
   it('creates contract with useClientAddress and rejects missing client', async () => {
@@ -106,7 +107,7 @@ const runIntegration = process.env.RUN_INTEGRATION_TESTS === '1';
         useClientAddress: true,
         startDate: '2025-01-01',
       }),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toMatchObject({ code: CONTRACT_API_ERROR_CODES.CLIENT_NOT_FOUND });
   });
 
   it('rejects contract when useClientAddress is false and address is omitted', async () => {
@@ -124,7 +125,9 @@ const runIntegration = process.env.RUN_INTEGRATION_TESTS === '1';
       startDate: '2025-01-01',
     };
 
-    await expect(createContract.execute(body)).rejects.toBeInstanceOf(BadRequestException);
+    await expect(createContract.execute(body)).rejects.toMatchObject({
+      code: CONTRACT_API_ERROR_CODES.INVALID_DATA,
+    });
   });
 
   it('prevents deleting client while a contract references it (FK restrict)', async () => {

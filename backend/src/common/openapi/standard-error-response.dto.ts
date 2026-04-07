@@ -18,6 +18,12 @@ export class StandardErrorResponseDto {
   })
   message!: string | string[];
 
+  @ApiPropertyOptional({
+    example: 'AUTH_EMAIL_NOT_VERIFIED',
+    description: 'Stable application error code (optional for backward compatibility)',
+  })
+  code?: string;
+
   @ApiPropertyOptional()
   details?: unknown;
 }

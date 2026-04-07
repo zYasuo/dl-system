@@ -1,6 +1,8 @@
 import { CreateUserBody } from '../dto/create-user.dto';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
+import { USER_API_ERROR_CODES } from '../errors';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
 import { randomUUID } from 'node:crypto';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
@@ -41,7 +43,10 @@ export class CreateUserUseCase {
     const existing = await this.userRepository.findByEmail(email);
 
     if (existing) {
-      throw new ConflictException('Registration failed');
+      throw new ApplicationException(
+        USER_API_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+        'Registration failed',
+      );
     }
 
     const hashedPassword = await this.passwordHasher.hash(password);

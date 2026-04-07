@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { AUTH_API_ERROR_CODES } from '../errors';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
 import type { UserCredentialRepositoryPort } from 'src/modules/users/domain/ports/repository/user-credential.repository.port';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
@@ -56,8 +56,8 @@ describe('ResetPasswordUseCase', () => {
   it('throws when reset record not found', async () => {
     passwordResetRepository.findByTokenHash.mockResolvedValue(null);
 
-    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toThrow(
-      BadRequestException,
+    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toMatchObject(
+      { code: AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN },
     );
 
     expect(credentialRepository.updatePasswordHash).not.toHaveBeenCalled();
@@ -75,8 +75,8 @@ describe('ResetPasswordUseCase', () => {
       }),
     );
 
-    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toThrow(
-      'Invalid or expired reset token',
+    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toMatchObject(
+      { code: AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN },
     );
   });
 
@@ -92,8 +92,8 @@ describe('ResetPasswordUseCase', () => {
       }),
     );
 
-    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toThrow(
-      BadRequestException,
+    await expect(useCase.execute({ token: 't', newPassword: 'newPassword12' })).rejects.toMatchObject(
+      { code: AUTH_API_ERROR_CODES.INVALID_RESET_TOKEN },
     );
   });
 

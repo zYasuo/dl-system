@@ -1,4 +1,5 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { randomUUID } from 'node:crypto';
 import { DomainError } from 'src/common/errors/domain.error';
 import { Address } from 'src/common/vo/address.vo';
@@ -12,6 +13,7 @@ import {
   ClientContractStatus,
 } from '../../domain/entities/client-contract.entity';
 import type { CreateClientContractBody } from '../dto/create-client-contract.dto';
+import { CONTRACT_API_ERROR_CODES } from '../errors';
 
 function atStartOfUtcDay(yyyyMmDd: string): Date {
   return new Date(`${yyyyMmDd}T00:00:00.000Z`);
@@ -29,7 +31,7 @@ export class CreateClientContractUseCase {
   async execute(input: CreateClientContractBody): Promise<ClientContractEntity> {
     const client = await this.clientRepository.findById(input.clientId);
     if (!client) {
-      throw new NotFoundException('Client not found');
+      throw new ApplicationException(CONTRACT_API_ERROR_CODES.CLIENT_NOT_FOUND, 'Client not found');
     }
 
     const startDate = atStartOfUtcDay(input.startDate);
@@ -70,7 +72,7 @@ export class CreateClientContractUseCase {
       });
     } catch (e) {
       if (e instanceof DomainError) {
-        throw new BadRequestException(e.message);
+        throw new ApplicationException(CONTRACT_API_ERROR_CODES.INVALID_DATA, e.message);
       }
       throw e;
     }
@@ -79,7 +81,10 @@ export class CreateClientContractUseCase {
       return await this.contractRepository.create(entity);
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2003') {
-        throw new NotFoundException('Client not found');
+        throw new ApplicationException(
+          CONTRACT_API_ERROR_CODES.CLIENT_NOT_FOUND,
+          'Client not found',
+        );
       }
       throw e;
     }

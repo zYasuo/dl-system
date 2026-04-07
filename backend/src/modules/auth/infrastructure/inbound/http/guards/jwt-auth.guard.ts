@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { COMMON_API_ERROR_CODES } from 'src/common/errors/application';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { TokenProviderPort } from 'src/modules/auth/domain/ports/security/token-provider.port';
@@ -37,7 +38,10 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        message: 'Unauthorized',
+        code: COMMON_API_ERROR_CODES.UNAUTHORIZED,
+      });
     }
 
     try {
@@ -47,7 +51,10 @@ export class JwtAuthGuard implements CanActivate {
         email: payload.email,
       };
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        message: 'Unauthorized',
+        code: COMMON_API_ERROR_CODES.UNAUTHORIZED,
+      });
     }
 
     return true;

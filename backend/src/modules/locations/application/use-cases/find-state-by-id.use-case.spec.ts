@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { StateRepositoryPort } from 'src/modules/locations/domain/ports/repository/state.repository.port';
 import { StateEntity } from 'src/modules/locations/domain/entities/state.entity';
@@ -18,7 +18,9 @@ describe('FindStateByIdUseCase', () => {
     const states = { findByUuid: jest.fn().mockResolvedValue(null) };
     const useCase = new FindStateByIdUseCase(states as unknown as StateRepositoryPort);
 
-    await expect(useCase.execute('x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('x')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.STATE_NOT_FOUND,
+    });
   });
 
   it('returns row when found', async () => {

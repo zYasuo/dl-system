@@ -1,10 +1,11 @@
-import { ForbiddenException, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { resolveApplicationErrorHttp } from 'src/common/errors/application';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
 import type { UserCredentialRepositoryPort } from 'src/modules/users/domain/ports/repository/user-credential.repository.port';
 import type { PasswordHasherPort } from 'src/modules/users/domain/ports/security/password-hasher.port';
 import type { SessionTokenIssuerPort } from '../../domain/ports/security/session-token-issuer.port';
+import { AUTH_API_ERROR_CODES } from '../errors';
 import { LoginUseCase } from './login.use-case';
 
 describe('LoginUseCase', () => {
@@ -63,7 +64,7 @@ describe('LoginUseCase', () => {
 
     await expect(
       useCase.execute({ email: 'missing@example.com', password: 'any' }),
-    ).rejects.toThrow(UnauthorizedException);
+    ).rejects.toMatchObject({ code: AUTH_API_ERROR_CODES.INVALID_CREDENTIALS });
 
     expect(passwordHasher.compare).toHaveBeenCalled();
     expect(sessionTokenIssuer.issue).not.toHaveBeenCalled();
@@ -83,9 +84,9 @@ describe('LoginUseCase', () => {
     credentialRepository.findByUserId.mockResolvedValue(makeCredential());
     passwordHasher.compare.mockResolvedValueOnce(false);
 
-    await expect(useCase.execute({ email: 'a@b.com', password: 'wrong' })).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(useCase.execute({ email: 'a@b.com', password: 'wrong' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.INVALID_CREDENTIALS,
+    });
 
     expect(credentialRepository.recordFailedLoginAttempt).toHaveBeenCalledWith(42);
     expect(sessionTokenIssuer.issue).not.toHaveBeenCalled();
@@ -106,12 +107,13 @@ describe('LoginUseCase', () => {
     userRepository.getInternalIdByUuid.mockResolvedValue(1);
     credentialRepository.findByUserId.mockResolvedValue(makeCredential({ lockedUntil }));
 
-    await expect(useCase.execute({ email: 'a@b.com', password: 'ok' })).rejects.toThrow(
-      HttpException,
-    );
     await expect(useCase.execute({ email: 'a@b.com', password: 'ok' })).rejects.toMatchObject({
-      status: HttpStatus.TOO_MANY_REQUESTS,
+      code: AUTH_API_ERROR_CODES.ACCOUNT_LOCKED,
     });
+
+    expect(
+      resolveApplicationErrorHttp(AUTH_API_ERROR_CODES.ACCOUNT_LOCKED)?.statusCode,
+    ).toBe(429);
 
     expect(passwordHasher.compare).not.toHaveBeenCalled();
     expect(credentialRepository.recordFailedLoginAttempt).not.toHaveBeenCalled();
@@ -154,9 +156,9 @@ describe('LoginUseCase', () => {
     credentialRepository.findByUserId.mockResolvedValue(makeCredential());
     passwordHasher.compare.mockResolvedValueOnce(true);
 
-    await expect(useCase.execute({ email: 'a@b.com', password: 'ok' })).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(useCase.execute({ email: 'a@b.com', password: 'ok' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.EMAIL_NOT_VERIFIED,
+    });
 
     expect(credentialRepository.clearLoginLockout).toHaveBeenCalledWith(2);
     expect(sessionTokenIssuer.issue).not.toHaveBeenCalled();

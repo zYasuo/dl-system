@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { CLIENT_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { Address } from 'src/common/vo/address.vo';
@@ -65,7 +65,7 @@ describe('CreateClientUseCase', () => {
     useCase = module.get(CreateClientUseCase);
   });
 
-  it('throws ConflictException when CPF exists', async () => {
+  it('throws when CPF exists', async () => {
     const id = randomUUID();
     repo.findByCpf.mockResolvedValue(
       ClientEntity.create({
@@ -87,7 +87,7 @@ describe('CreateClientUseCase', () => {
 
     await expect(
       useCase.execute({ name: 'New', cpf: '52998224725', address }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).rejects.toMatchObject({ code: CLIENT_API_ERROR_CODES.CPF_ALREADY_REGISTERED });
     expect(repo.create).not.toHaveBeenCalled();
   });
 

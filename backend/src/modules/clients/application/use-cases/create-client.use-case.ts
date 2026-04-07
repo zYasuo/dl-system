@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { randomUUID } from 'node:crypto';
 import { DomainError } from 'src/common/errors/domain.error';
 import { Address } from 'src/common/vo/address.vo';
@@ -10,6 +11,7 @@ import { ClientEntity } from '../../domain/entities/client.entity';
 import { Cnpj } from '../../domain/vo/cnpj.vo';
 import { Cpf } from '../../domain/vo/cpf.vo';
 import type { CreateClientBody } from '../dto/create-client.dto';
+import { CLIENT_API_ERROR_CODES } from '../errors';
 
 @Injectable()
 export class CreateClientUseCase {
@@ -28,13 +30,19 @@ export class CreateClientUseCase {
     if (cpf) {
       const existing = await this.clientRepository.findByCpf(cpf.value);
       if (existing) {
-        throw new ConflictException('CPF already registered');
+        throw new ApplicationException(
+          CLIENT_API_ERROR_CODES.CPF_ALREADY_REGISTERED,
+          'CPF already registered',
+        );
       }
     }
     if (cnpj) {
       const existing = await this.clientRepository.findByCnpj(cnpj.value);
       if (existing) {
-        throw new ConflictException('CNPJ already registered');
+        throw new ApplicationException(
+          CLIENT_API_ERROR_CODES.CNPJ_ALREADY_REGISTERED,
+          'CNPJ already registered',
+        );
       }
     }
 
@@ -66,7 +74,7 @@ export class CreateClientUseCase {
       });
     } catch (e) {
       if (e instanceof DomainError) {
-        throw new BadRequestException(e.message);
+        throw new ApplicationException(CLIENT_API_ERROR_CODES.INVALID_DATA, e.message);
       }
       throw e;
     }
@@ -78,7 +86,10 @@ export class CreateClientUseCase {
       return created;
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2002') {
-        throw new ConflictException('Duplicate document');
+        throw new ApplicationException(
+          CLIENT_API_ERROR_CODES.DUPLICATE_DOCUMENT,
+          'Duplicate document',
+        );
       }
       throw e;
     }

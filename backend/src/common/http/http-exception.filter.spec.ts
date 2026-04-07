@@ -1,6 +1,12 @@
 import { ArgumentsHost, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
+import {
+  ApplicationException,
+  COMMON_API_ERROR_CODES,
+} from '../errors/application';
+import { DomainError } from '../errors/domain.error';
 import { ConcurrencyError } from '../errors/concurrency.error';
+import { AUTH_API_ERROR_CODES } from 'src/modules/auth/application/errors';
 import { HttpExceptionFilter } from './http-exception.filter';
 
 describe('HttpExceptionFilter', () => {
@@ -48,6 +54,7 @@ describe('HttpExceptionFilter', () => {
         success: false,
         statusCode: HttpStatus.CONFLICT,
         message: 'stale',
+        code: COMMON_API_ERROR_CODES.CONFLICT,
       }),
     );
   });
@@ -80,6 +87,61 @@ describe('HttpExceptionFilter', () => {
       expect.objectContaining({
         message: ['a', 'b'],
         error: 'Unprocessable Entity',
+      }),
+    );
+  });
+
+  it('maps ApplicationException via registry', () => {
+    const json = jest.fn();
+    const status = jest.fn().mockReturnValue({ json });
+    filter.catch(
+      new ApplicationException(
+        AUTH_API_ERROR_CODES.EMAIL_NOT_VERIFIED,
+        'Complete email verification before signing in',
+      ),
+      mockHost({ status } as unknown as Response),
+    );
+
+    expect(status).toHaveBeenCalledWith(HttpStatus.FORBIDDEN);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        statusCode: HttpStatus.FORBIDDEN,
+        code: AUTH_API_ERROR_CODES.EMAIL_NOT_VERIFIED,
+        message: 'Complete email verification before signing in',
+      }),
+    );
+  });
+
+  it('maps DomainError to 400 with COMMON_DOMAIN_VALIDATION_FAILED', () => {
+    const json = jest.fn();
+    const status = jest.fn().mockReturnValue({ json });
+    filter.catch(new DomainError('invalid'), mockHost({ status } as unknown as Response));
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: COMMON_API_ERROR_CODES.DOMAIN_VALIDATION_FAILED,
+        message: 'invalid',
+      }),
+    );
+  });
+
+  it('passes code from HttpException body when present', () => {
+    const json = jest.fn();
+    const status = jest.fn().mockReturnValue({ json });
+    filter.catch(
+      new BadRequestException({
+        message: 'Validation failed',
+        code: COMMON_API_ERROR_CODES.VALIDATION_FAILED,
+        errors: {},
+      }),
+      mockHost({ status } as unknown as Response),
+    );
+
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: COMMON_API_ERROR_CODES.VALIDATION_FAILED,
       }),
     );
   });

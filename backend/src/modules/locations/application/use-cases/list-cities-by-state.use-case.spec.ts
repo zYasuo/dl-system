@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { CityRepositoryPort } from 'src/modules/locations/domain/ports/repository/city.repository.port';
 import type { StateRepositoryPort } from 'src/modules/locations/domain/ports/repository/state.repository.port';
@@ -25,7 +25,9 @@ describe('ListCitiesByStateUseCase', () => {
       cities as unknown as CityRepositoryPort,
     );
 
-    await expect(useCase.execute({ stateUuid })).rejects.toBeInstanceOf(BadRequestException);
+    await expect(useCase.execute({ stateUuid })).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.PARENT_STATE_INVALID,
+    });
   });
 
   it('returns cities', async () => {

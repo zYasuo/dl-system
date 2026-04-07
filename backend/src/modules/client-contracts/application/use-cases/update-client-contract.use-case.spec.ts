@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { CONTRACT_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { CLIENT_CONTRACT_REPOSITORY } from '../../di.tokens';
@@ -54,14 +54,14 @@ describe('UpdateClientContractUseCase', () => {
     repo.findById.mockResolvedValue(null);
     await expect(
       useCase.execute(randomUUID(), { status: ClientContractStatus.CANCELLED }),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toMatchObject({ code: CONTRACT_API_ERROR_CODES.NOT_FOUND });
   });
 
   it('rejects useClientAddress false without address on contract', async () => {
     repo.findById.mockResolvedValue(existing);
-    await expect(useCase.execute(existing.id, { useClientAddress: false })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(useCase.execute(existing.id, { useClientAddress: false })).rejects.toMatchObject({
+      code: CONTRACT_API_ERROR_CODES.INVALID_DATA,
+    });
   });
 
   it('updates status', async () => {

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { CLIENT_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { CACHE_PORT } from 'src/modules/cache/di.tokens';
@@ -35,7 +35,9 @@ describe('FindClientByIdUseCase', () => {
   it('throws when missing', async () => {
     cache.getJson.mockResolvedValue(null);
     repo.findById.mockResolvedValue(null);
-    await expect(useCase.execute(randomUUID())).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute(randomUUID())).rejects.toMatchObject({
+      code: CLIENT_API_ERROR_CODES.NOT_FOUND,
+    });
   });
 
   it('returns client from repository and sets cache on miss', async () => {

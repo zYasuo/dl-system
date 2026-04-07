@@ -1,4 +1,5 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { DomainError } from 'src/common/errors/domain.error';
 import { Address } from 'src/common/vo/address.vo';
 import { ValidateAddressGeoUseCase } from 'src/modules/locations/application/use-cases/validate-address-geo.use-case';
@@ -9,6 +10,7 @@ import {
   ClientContractStatus,
 } from '../../domain/entities/client-contract.entity';
 import type { UpdateClientContractBody } from '../dto/update-client-contract.dto';
+import { CONTRACT_API_ERROR_CODES } from '../errors';
 
 function atStartOfUtcDay(yyyyMmDd: string): Date {
   return new Date(`${yyyyMmDd}T00:00:00.000Z`);
@@ -25,7 +27,7 @@ export class UpdateClientContractUseCase {
   async execute(id: string, input: UpdateClientContractBody): Promise<ClientContractEntity> {
     const current = await this.contractRepository.findById(id);
     if (!current) {
-      throw new NotFoundException('Contract not found');
+      throw new ApplicationException(CONTRACT_API_ERROR_CODES.NOT_FOUND, 'Contract not found');
     }
 
     const p = current.toParams();
@@ -62,12 +64,15 @@ export class UpdateClientContractUseCase {
           );
         } catch (e) {
           if (e instanceof DomainError) {
-            throw new BadRequestException(e.message);
+            throw new ApplicationException(CONTRACT_API_ERROR_CODES.INVALID_DATA, e.message);
           }
           throw e;
         }
       } else if (!p.address) {
-        throw new BadRequestException('address is required when useClientAddress is false');
+        throw new ApplicationException(
+          CONTRACT_API_ERROR_CODES.INVALID_DATA,
+          'address is required when useClientAddress is false',
+        );
       }
     }
 
@@ -76,7 +81,7 @@ export class UpdateClientContractUseCase {
       next.validate();
     } catch (e) {
       if (e instanceof DomainError) {
-        throw new BadRequestException(e.message);
+        throw new ApplicationException(CONTRACT_API_ERROR_CODES.INVALID_DATA, e.message);
       }
       throw e;
     }

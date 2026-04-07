@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { USER_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/repository/user.repository.port';
@@ -47,7 +47,7 @@ describe('CreateUserUseCase', () => {
     );
   });
 
-  it('throws ConflictException when email already exists', async () => {
+  it('throws when email already exists', async () => {
     userRepository.findByEmail.mockResolvedValue(
       UserEntity.create({
         id: randomUUID(),
@@ -64,7 +64,7 @@ describe('CreateUserUseCase', () => {
         email: 'a@b.com',
         password: 'password12',
       }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toMatchObject({ code: USER_API_ERROR_CODES.EMAIL_ALREADY_EXISTS });
 
     expect(passwordHasher.hash).not.toHaveBeenCalled();
     expect(userRepository.createWithCredential).not.toHaveBeenCalled();

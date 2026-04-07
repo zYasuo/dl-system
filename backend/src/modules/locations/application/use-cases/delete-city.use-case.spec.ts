@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { CityRepositoryPort } from 'src/modules/locations/domain/ports/repository/city.repository.port';
 import { CityEntity } from 'src/modules/locations/domain/entities/city.entity';
@@ -17,7 +17,9 @@ describe('DeleteCityUseCase', () => {
     const cities = { findByUuid: jest.fn().mockResolvedValue(null), deleteByUuid: jest.fn() };
     const useCase = new DeleteCityUseCase(cities as unknown as CityRepositoryPort);
 
-    await expect(useCase.execute('x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('x')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.CITY_NOT_FOUND,
+    });
   });
 
   it('throws Conflict on P2003', async () => {
@@ -27,7 +29,9 @@ describe('DeleteCityUseCase', () => {
     };
     const useCase = new DeleteCityUseCase(cities as unknown as CityRepositoryPort);
 
-    await expect(useCase.execute(existing.id)).rejects.toBeInstanceOf(ConflictException);
+    await expect(useCase.execute(existing.id)).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.CITY_REFERENCED,
+    });
   });
 
   it('deletes when ok', async () => {

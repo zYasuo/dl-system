@@ -10,5 +10,6 @@ export type HttpErrorEnvelope = {
   statusCode: number;
   error: string;
   message: string | string[];
+  code?: string;
   details?: unknown;
 };

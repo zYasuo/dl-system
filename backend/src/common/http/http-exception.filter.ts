@@ -1,10 +1,25 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import type { Response } from 'express';
+import {
+  ApplicationException,
+  COMMON_API_ERROR_CODES,
+  resolveApplicationErrorHttp,
+} from '../errors/application';
+import { DomainError } from '../errors/domain.error';
 import { ConcurrencyError } from '../errors/concurrency.error';
 import type { HttpErrorEnvelope } from './http-contract.types';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
@@ -16,6 +31,41 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private toErrorBody(exception: unknown): HttpErrorEnvelope {
     const timestamp = new Date().toISOString();
 
+    if (exception instanceof ApplicationException) {
+      const meta = resolveApplicationErrorHttp(exception.code);
+      if (!meta) {
+        this.logger.warn(`Unknown application error code: ${exception.code}`);
+        return {
+          success: false,
+          timestamp,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Internal Server Error',
+          message: 'Internal server error',
+          code: exception.code,
+        };
+      }
+      return {
+        success: false,
+        timestamp,
+        statusCode: meta.statusCode,
+        error: meta.error,
+        message: exception.message,
+        code: exception.code,
+        ...(exception.details !== undefined ? { details: exception.details } : {}),
+      };
+    }
+
+    if (exception instanceof DomainError) {
+      return {
+        success: false,
+        timestamp,
+        statusCode: HttpStatus.BAD_REQUEST,
+        error: 'Bad Request',
+        message: exception.message,
+        code: COMMON_API_ERROR_CODES.DOMAIN_VALIDATION_FAILED,
+      };
+    }
+
     if (exception instanceof ConcurrencyError) {
       return {
         success: false,
@@ -23,6 +73,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.CONFLICT,
         error: 'Conflict',
         message: exception.message,
+        code: COMMON_API_ERROR_CODES.CONFLICT,
       };
     }
 
@@ -32,6 +83,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       let message: string | string[] = exception.message;
       let error = this.statusToTitle(statusCode);
       let details: unknown;
+      let code: string | undefined;
 
       if (typeof raw === 'string') {
         message = raw;
@@ -42,6 +94,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
         if (typeof o.error === 'string') {
           error = o.error;
+        }
+        if (typeof o.code === 'string') {
+          code = o.code;
         }
         if (o.errors !== undefined) {
           details = o.errors;
@@ -56,6 +111,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         statusCode,
         error,
         message,
+        ...(code !== undefined ? { code } : {}),
         ...(details !== undefined ? { details } : {}),
       };
     }

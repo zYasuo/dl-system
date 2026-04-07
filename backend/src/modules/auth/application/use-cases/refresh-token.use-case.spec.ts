@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { AUTH_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
@@ -58,8 +58,12 @@ describe('RefreshTokenUseCase', () => {
   });
 
   it('throws when refresh token empty', async () => {
-    await expect(useCase.execute('')).rejects.toThrow(UnauthorizedException);
-    await expect(useCase.execute('   ')).rejects.toThrow(UnauthorizedException);
+    await expect(useCase.execute('')).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+    });
+    await expect(useCase.execute('   ')).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+    });
   });
 
   it('revokes family when token already revoked (reuse)', async () => {
@@ -75,7 +79,9 @@ describe('RefreshTokenUseCase', () => {
     tokenProvider.hashToken.mockReturnValueOnce('h');
     refreshTokenRepository.findByTokenHash.mockResolvedValue(stored);
 
-    await expect(useCase.execute('raw-token')).rejects.toThrow(UnauthorizedException);
+    await expect(useCase.execute('raw-token')).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+    });
 
     expect(refreshTokenRepository.revokeByFamily).toHaveBeenCalledWith(familyId);
     expect(refreshTokenRepository.revokeById).not.toHaveBeenCalled();

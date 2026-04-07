@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { CONTRACT_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { CLIENT_CONTRACT_REPOSITORY } from '../../di.tokens';
@@ -26,7 +26,9 @@ describe('FindClientContractByIdUseCase', () => {
 
   it('throws when missing', async () => {
     repo.findById.mockResolvedValue(null);
-    await expect(useCase.execute(randomUUID())).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute(randomUUID())).rejects.toMatchObject({
+      code: CONTRACT_API_ERROR_CODES.NOT_FOUND,
+    });
   });
 
   it('returns contract', async () => {

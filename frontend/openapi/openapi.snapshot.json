@@ -108,6 +108,16 @@
               }
             }
           },
+          "403": {
+            "description": "Email not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
           "429": {
             "description": "Rate limit",
             "content": {
@@ -298,6 +308,110 @@
           }
         },
         "summary": "Confirm password reset with token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/verify": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation or verification failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verify email with 6-digit OTP",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/resend": {
+      "post": {
+        "operationId": "AuthController_resendEmailVerification",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailVerificationBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Same message whether or not the email is eligible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageEnvelopeOpenApiDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Resend email verification code",
         "tags": [
           "Auth"
         ]
@@ -2625,6 +2739,11 @@
               }
             ]
           },
+          "code": {
+            "type": "string",
+            "example": "AUTH_EMAIL_NOT_VERIFIED",
+            "description": "Stable application error code (optional for backward compatibility)"
+          },
           "details": {
             "type": "object"
           }
@@ -2746,6 +2865,39 @@
         "required": [
           "token",
           "newPassword"
+        ]
+      },
+      "VerifyEmailBodyDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "ResendEmailVerificationBodyDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "TicketPublicHttpOpenApiDto": {

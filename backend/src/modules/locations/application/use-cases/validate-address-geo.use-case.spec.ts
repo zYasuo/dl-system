@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CITY_REPOSITORY } from 'src/modules/locations/di.tokens';
 import type { CityRepositoryPort } from 'src/modules/locations/domain/ports/repository/city.repository.port';
@@ -44,15 +44,15 @@ describe('ValidateAddressGeoUseCase', () => {
       state: { uuid: SP_STATE, name: 'São Paulo', code: 'SP' },
     });
 
-    await expect(useCase.execute(RJ_STATE, SAO_PAULO_CITY)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(useCase.execute(RJ_STATE, SAO_PAULO_CITY)).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.GEO_CITY_STATE_MISMATCH,
+    });
   });
 
   it('throws when city missing', async () => {
     cities.findByUuidWithState.mockResolvedValue(null);
-    await expect(useCase.execute(SP_STATE, SAO_PAULO_CITY)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(useCase.execute(SP_STATE, SAO_PAULO_CITY)).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.GEO_CITY_NOT_FOUND,
+    });
   });
 });

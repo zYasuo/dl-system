@@ -6,6 +6,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
+import { COMMON_API_ERROR_CODES } from '../errors/application';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
@@ -45,7 +46,13 @@ export class RateLimitGuard implements CanActivate {
 
     const { count } = await this.rateLimitStore.increment(key, entry.windowSeconds);
     if (count > entry.max) {
-      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        {
+          message: 'Too many requests',
+          code: COMMON_API_ERROR_CODES.RATE_LIMITED,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     return true;

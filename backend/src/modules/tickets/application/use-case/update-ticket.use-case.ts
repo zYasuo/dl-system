@@ -1,10 +1,5 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { CACHE_PORT } from 'src/modules/cache/di.tokens';
 import { TICKET_REPOSITORY } from '../../di.tokens';
 import type { TicketRepositoryPort } from '../../domain/ports/repository/ticket.repository.port';
@@ -14,6 +9,7 @@ import type { CachePort } from 'src/common/ports/cache/cache.ports';
 import { ticketUserListVersionKey } from '../cache/ticket-key-builder.cache';
 import { ticketCacheKey } from '../cache/ticket-cache.key';
 import type { UpdateTicketBody } from '../dto/update-ticket.dto';
+import { TICKET_API_ERROR_CODES } from '../errors';
 
 @Injectable()
 export class UpdateTicketUseCase {
@@ -29,16 +25,19 @@ export class UpdateTicketUseCase {
   ): Promise<TicketEntity> {
     const current = await this.ticketRepository.findById(ticketId);
     if (!current) {
-      throw new NotFoundException('Ticket not found');
+      throw new ApplicationException(TICKET_API_ERROR_CODES.NOT_FOUND, 'Ticket not found');
     }
 
     if (current.userId !== userUuid) {
-      throw new ForbiddenException();
+      throw new ApplicationException(TICKET_API_ERROR_CODES.ACCESS_DENIED, 'Forbidden');
     }
 
     const expectedVersion = new Date(input.updatedAt);
     if (Number.isNaN(expectedVersion.getTime())) {
-      throw new BadRequestException('Invalid updatedAt');
+      throw new ApplicationException(
+        TICKET_API_ERROR_CODES.INVALID_VERSION,
+        'Invalid updatedAt',
+      );
     }
 
     const toUpdate = TicketEntity.create({

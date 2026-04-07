@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { CountryRepositoryPort } from 'src/modules/locations/domain/ports/repository/country.repository.port';
 import type { StateRepositoryPort } from 'src/modules/locations/domain/ports/repository/state.repository.port';
@@ -23,9 +23,9 @@ describe('CreateStateUseCase', () => {
       states as unknown as StateRepositoryPort,
     );
 
-    await expect(useCase.execute({ countryUuid, name: 'SP', code: 'sp' })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(useCase.execute({ countryUuid, name: 'SP', code: 'sp' })).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.PARENT_COUNTRY_INVALID,
+    });
     expect(states.create).not.toHaveBeenCalled();
   });
 

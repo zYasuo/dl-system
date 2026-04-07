@@ -1,4 +1,5 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { CACHE_PORT } from 'src/modules/cache/di.tokens';
 import type { CachePort } from 'src/common/ports/cache/cache.ports';
 import { ClientCacheKeyBuilder } from '../cache/client-cache-key-builder';
@@ -6,6 +7,7 @@ import { encodeClientDetail, tryDecodeClientDetailCache } from '../mappers/clien
 import { CLIENT_REPOSITORY } from '../../di.tokens';
 import type { ClientRepositoryPort } from '../../domain/ports/repository/client.repository.port';
 import { ClientEntity } from '../../domain/entities/client.entity';
+import { CLIENT_API_ERROR_CODES } from '../errors';
 
 @Injectable()
 export class FindClientByIdUseCase {
@@ -26,7 +28,7 @@ export class FindClientByIdUseCase {
 
     const client = await this.clientRepository.findById(id);
     if (!client) {
-      throw new NotFoundException('Client not found');
+      throw new ApplicationException(CLIENT_API_ERROR_CODES.NOT_FOUND, 'Client not found');
     }
 
     await this.cachePort.setJson(cacheKey, encodeClientDetail(client), this.CACHE_TTL_SECONDS);

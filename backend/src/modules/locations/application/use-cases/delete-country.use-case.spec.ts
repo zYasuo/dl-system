@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import type { CountryRepositoryPort } from 'src/modules/locations/domain/ports/repository/country.repository.port';
 import { CountryEntity } from 'src/modules/locations/domain/entities/country.entity';
 import { DeleteCountryUseCase } from './delete-country.use-case';
@@ -15,7 +15,9 @@ describe('DeleteCountryUseCase', () => {
     const countries = { findByUuid: jest.fn().mockResolvedValue(null), deleteByUuid: jest.fn() };
     const useCase = new DeleteCountryUseCase(countries as unknown as CountryRepositoryPort);
 
-    await expect(useCase.execute('x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('x')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.COUNTRY_NOT_FOUND,
+    });
   });
 
   it('throws Conflict on Prisma P2003', async () => {
@@ -25,7 +27,9 @@ describe('DeleteCountryUseCase', () => {
     };
     const useCase = new DeleteCountryUseCase(countries as unknown as CountryRepositoryPort);
 
-    await expect(useCase.execute('u1')).rejects.toBeInstanceOf(ConflictException);
+    await expect(useCase.execute('u1')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.COUNTRY_REFERENCED,
+    });
   });
 
   it('deletes when ok', async () => {

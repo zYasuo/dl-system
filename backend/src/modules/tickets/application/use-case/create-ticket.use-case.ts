@@ -1,4 +1,5 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { randomUUID } from 'node:crypto';
 import { CACHE_PORT } from 'src/modules/cache/di.tokens';
 import {
@@ -23,6 +24,7 @@ import {
   NotificationStatus,
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import type { CreateTicketBody } from '../dto/create-ticket.dto';
+import { TICKET_API_ERROR_CODES } from '../errors';
 
 @Injectable()
 export class CreateTicketUseCase {
@@ -41,7 +43,7 @@ export class CreateTicketUseCase {
   async execute(input: CreateTicketBody, userUuid: string): Promise<TicketEntity> {
     const user = await this.userRepository.findByUuid(userUuid);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new ApplicationException(TICKET_API_ERROR_CODES.USER_NOT_FOUND, 'User not found');
     }
 
     const { title, description } = input;

@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { z } from 'zod';
+import { COMMON_API_ERROR_CODES } from '../errors/application';
 import { ZodValidationPipe } from './zod-validation.pipe';
 
 describe('ZodValidationPipe', () => {
@@ -45,6 +46,7 @@ describe('ZodValidationPipe', () => {
     } catch (e) {
       const res = (e as BadRequestException).getResponse() as Record<string, unknown>;
       expect(res.message).toBe('Validation failed');
+      expect(res.code).toBe(COMMON_API_ERROR_CODES.VALIDATION_FAILED);
       expect(res.errors).toBeDefined();
     }
   });

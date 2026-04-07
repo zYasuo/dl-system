@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { AUTH_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import type { UserRepositoryPort } from 'src/modules/users/domain/ports/repository/user.repository.port';
@@ -45,9 +45,9 @@ describe('VerifyEmailOtpUseCase', () => {
 
   it('throws BadRequest when user missing', async () => {
     userRepository.findByEmail.mockResolvedValue(null);
-    await expect(useCase.execute({ email: 'x@y.com', code: '123456' })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(useCase.execute({ email: 'x@y.com', code: '123456' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.VERIFICATION_FAILED,
+    });
   });
 
   it('throws BadRequest when already verified', async () => {
@@ -61,9 +61,9 @@ describe('VerifyEmailOtpUseCase', () => {
         updatedAt: now,
       }),
     );
-    await expect(useCase.execute({ email: 'a@b.com', code: '123456' })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(useCase.execute({ email: 'a@b.com', code: '123456' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.VERIFICATION_FAILED,
+    });
   });
 
   it('verifies and updates user when code matches', async () => {
@@ -112,9 +112,9 @@ describe('VerifyEmailOtpUseCase', () => {
     });
     codeHasher.verify.mockReturnValue(false);
 
-    await expect(useCase.execute({ email: 'a@b.com', code: '000000' })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(useCase.execute({ email: 'a@b.com', code: '000000' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.VERIFICATION_FAILED,
+    });
 
     expect(challengeRepository.incrementAttempts).toHaveBeenCalledWith('ch-1');
     expect(userRepository.setEmailVerifiedAt).not.toHaveBeenCalled();
@@ -139,9 +139,9 @@ describe('VerifyEmailOtpUseCase', () => {
       attemptCount: EMAIL_VERIFICATION_MAX_ATTEMPTS,
     });
 
-    await expect(useCase.execute({ email: 'a@b.com', code: '123456' })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(useCase.execute({ email: 'a@b.com', code: '123456' })).rejects.toMatchObject({
+      code: AUTH_API_ERROR_CODES.VERIFICATION_FAILED,
+    });
 
     expect(codeHasher.verify).not.toHaveBeenCalled();
   });

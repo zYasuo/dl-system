@@ -1,7 +1,10 @@
-import { ConflictException, INestApplication } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
+import { ApplicationException } from 'src/common/errors/application';
+import { HttpExceptionFilter } from 'src/common/http/http-exception.filter';
 import { requestNest } from 'src/test-support/supertest-nest-app';
+import { USER_API_ERROR_CODES } from 'src/modules/users/application/errors';
 import { CreateUserUseCase } from 'src/modules/users/application/use-cases/create-user.use-case';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import { UserController } from './user.controller';
@@ -26,6 +29,7 @@ describe('UserController (integration)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalFilters(new HttpExceptionFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
   });
@@ -34,8 +38,10 @@ describe('UserController (integration)', () => {
     await app.close();
   });
 
-  it('returns 409 when use case throws ConflictException', () => {
-    createUser.execute.mockRejectedValue(new ConflictException('Registration failed'));
+  it('returns 409 when use case throws email already exists', () => {
+    createUser.execute.mockRejectedValue(
+      new ApplicationException(USER_API_ERROR_CODES.EMAIL_ALREADY_EXISTS, 'Registration failed'),
+    );
 
     return requestNest(app)
       .post('/api/v1/users')
@@ -44,7 +50,13 @@ describe('UserController (integration)', () => {
         email: 'dan@example.com',
         password: 'password12',
       })
-      .expect(409);
+      .expect(409)
+      .expect((res) => {
+        expect(res.body).toMatchObject({
+          success: false,
+          code: USER_API_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+        });
+      });
   });
 
   it('returns 400 when body fails Zod validation', () => {

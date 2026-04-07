@@ -10,6 +10,7 @@ import type { TicketRepositoryPort } from '../../domain/ports/repository/ticket.
 import { encodeTicketRow } from '../mappers/ticket-cache.codec';
 import { ticketUserListVersionKey } from '../cache/ticket-key-builder.cache';
 import { ticketCacheKey } from '../cache/ticket-cache.key';
+import { TICKET_API_ERROR_CODES } from '../errors';
 import { CreateTicketUseCase } from './create-ticket.use-case';
 
 describe('CreateTicketUseCase', () => {
@@ -77,6 +78,14 @@ describe('CreateTicketUseCase', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+  });
+
+  it('throws when user missing', async () => {
+    userRepository.findByUuid.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({ title: 'Bug', description: 'Something broke' }, userId),
+    ).rejects.toMatchObject({ code: TICKET_API_ERROR_CODES.USER_NOT_FOUND });
   });
 
   it('persists ticket, bumps list version, caches ticket, creates notification and enqueues job', async () => {

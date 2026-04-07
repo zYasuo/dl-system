@@ -1,11 +1,4 @@
-import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   PASSWORD_HASHER,
   USER_CREDENTIAL_REPOSITORY,
@@ -21,6 +14,8 @@ import type {
   SessionTokenIssuerPort,
   SessionTokens,
 } from '../../domain/ports/security/session-token-issuer.port';
+import { ApplicationException } from 'src/common/errors/application';
+import { AUTH_API_ERROR_CODES } from '../errors';
 
 const DUMMY_HASH =
   '$argon2id$v=19$m=19456,t=2,p=4$JMdI74dxqkC6ES1zzlG+rQ$O2PXX5Ze/TEmBGUuBZn5rpPghLhuoDNZXurwGg+CtGU';
@@ -46,21 +41,27 @@ export class LoginUseCase {
 
     if (!user) {
       await this.passwordHasher.compare(input.password, DUMMY_HASH);
-      throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_CREDENTIALS,
+        INVALID_CREDENTIALS_MSG,
+      );
     }
 
     const internalId = await this.userRepository.getInternalIdByUuid(user.id);
     const credential = await this.credentialRepository.findByUserId(internalId);
 
     if (!credential) {
-      throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_CREDENTIALS,
+        INVALID_CREDENTIALS_MSG,
+      );
     }
 
     const now = Date.now();
 
     if (credential.lockedUntil) {
       if (credential.lockedUntil.getTime() > now) {
-        throw new HttpException(ACCOUNT_LOCKED_MSG, HttpStatus.TOO_MANY_REQUESTS);
+        throw new ApplicationException(AUTH_API_ERROR_CODES.ACCOUNT_LOCKED, ACCOUNT_LOCKED_MSG);
       }
       await this.credentialRepository.clearLoginLockout(internalId);
     }
@@ -72,13 +73,19 @@ export class LoginUseCase {
 
     if (!passwordValid) {
       await this.credentialRepository.recordFailedLoginAttempt(internalId);
-      throw new UnauthorizedException(INVALID_CREDENTIALS_MSG);
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_CREDENTIALS,
+        INVALID_CREDENTIALS_MSG,
+      );
     }
 
     await this.credentialRepository.clearLoginLockout(internalId);
 
     if (!user.emailVerifiedAt) {
-      throw new ForbiddenException('Complete email verification before signing in');
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.EMAIL_NOT_VERIFIED,
+        'Complete email verification before signing in',
+      );
     }
 
     return this.sessionTokenIssuer.issue({

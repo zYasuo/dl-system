@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { CityRepositoryPort } from 'src/modules/locations/domain/ports/repository/city.repository.port';
 import { CityEntity } from 'src/modules/locations/domain/entities/city.entity';
@@ -17,7 +17,9 @@ describe('FindCityByIdUseCase', () => {
     const cities = { findByUuid: jest.fn().mockResolvedValue(null) };
     const useCase = new FindCityByIdUseCase(cities as unknown as CityRepositoryPort);
 
-    await expect(useCase.execute('x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('x')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.CITY_NOT_FOUND,
+    });
   });
 
   it('returns when found', async () => {

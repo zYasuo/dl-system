@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { CONTRACT_API_ERROR_CODES } from '../errors';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { CLIENT_REPOSITORY } from 'src/modules/clients/di.tokens';
@@ -61,7 +61,7 @@ describe('CreateClientContractUseCase', () => {
         useClientAddress: true,
         startDate: '2025-01-01',
       }),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toMatchObject({ code: CONTRACT_API_ERROR_CODES.CLIENT_NOT_FOUND });
   });
 
   it('creates contract', async () => {

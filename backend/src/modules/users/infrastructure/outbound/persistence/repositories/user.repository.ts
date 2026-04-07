@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
+import { USER_API_ERROR_CODES } from 'src/modules/users/application/errors';
 import {
   UserRepositoryPort,
   type CreateUserWithCredentialResult,
@@ -131,7 +133,7 @@ export class UserRepository extends UserRepositoryPort {
     });
 
     if (!row) {
-      throw new NotFoundException('User not found');
+      throw new ApplicationException(USER_API_ERROR_CODES.NOT_FOUND, 'User not found');
     }
 
     return row.id;

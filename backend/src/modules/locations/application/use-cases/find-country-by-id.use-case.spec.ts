@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import type { CountryRepositoryPort } from 'src/modules/locations/domain/ports/repository/country.repository.port';
 import { CountryEntity } from 'src/modules/locations/domain/entities/country.entity';
 import { FindCountryByIdUseCase } from './find-country-by-id.use-case';
@@ -15,7 +15,9 @@ describe('FindCountryByIdUseCase', () => {
     const countries = { findByUuid: jest.fn().mockResolvedValue(null) };
     const useCase = new FindCountryByIdUseCase(countries as unknown as CountryRepositoryPort);
 
-    await expect(useCase.execute('missing')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('missing')).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.COUNTRY_NOT_FOUND,
+    });
   });
 
   it('returns entity when found', async () => {

@@ -1,4 +1,5 @@
 import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import { COMMON_API_ERROR_CODES } from '../errors/application';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
 
@@ -15,6 +16,7 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
       if (value === undefined || value === null) {
         throw new BadRequestException({
           message: 'Validation failed',
+          code: COMMON_API_ERROR_CODES.VALIDATION_FAILED,
           errors: {
             errors: ['Request body is empty or missing Content-Type: application/json header'],
           },
@@ -32,6 +34,7 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
       const errors = z.treeifyError(result.error);
       throw new BadRequestException({
         message: 'Validation failed',
+        code: COMMON_API_ERROR_CODES.VALIDATION_FAILED,
         errors,
       });
     }

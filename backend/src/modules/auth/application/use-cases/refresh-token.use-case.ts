@@ -1,4 +1,5 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { REFRESH_TOKEN_REPOSITORY, SESSION_TOKEN_ISSUER, TOKEN_PROVIDER } from '../../di.tokens';
 import { USER_REPOSITORY } from 'src/modules/users/di.tokens';
 import type { TokenProviderPort } from '../../domain/ports/security/token-provider.port';
@@ -8,8 +9,11 @@ import type {
   SessionTokenIssuerPort,
   SessionTokens,
 } from '../../domain/ports/security/session-token-issuer.port';
+import { AUTH_API_ERROR_CODES } from '../errors';
 
 export type RefreshResult = SessionTokens;
+
+const REFRESH_UNAUTHORIZED_MSG = 'Unauthorized';
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -24,30 +28,45 @@ export class RefreshTokenUseCase {
 
   async execute(rawRefreshToken: string): Promise<RefreshResult> {
     if (!rawRefreshToken?.trim()) {
-      throw new UnauthorizedException();
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+        REFRESH_UNAUTHORIZED_MSG,
+      );
     }
 
     const tokenHash = this.tokenProvider.hashToken(rawRefreshToken);
     const stored = await this.refreshTokenRepository.findByTokenHash(tokenHash);
 
     if (!stored) {
-      throw new UnauthorizedException();
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+        REFRESH_UNAUTHORIZED_MSG,
+      );
     }
 
     if (stored.isRevoked) {
       await this.refreshTokenRepository.revokeByFamily(stored.familyId);
-      throw new UnauthorizedException();
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+        REFRESH_UNAUTHORIZED_MSG,
+      );
     }
 
     if (stored.isExpired) {
-      throw new UnauthorizedException();
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+        REFRESH_UNAUTHORIZED_MSG,
+      );
     }
 
     await this.refreshTokenRepository.revokeById(stored.id);
 
     const user = await this.userRepository.findByInternalId(stored.userId);
     if (!user) {
-      throw new UnauthorizedException();
+      throw new ApplicationException(
+        AUTH_API_ERROR_CODES.INVALID_REFRESH_TOKEN,
+        REFRESH_UNAUTHORIZED_MSG,
+      );
     }
 
     return this.sessionTokenIssuer.issue({

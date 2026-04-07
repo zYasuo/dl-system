@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import type { StateRepositoryPort } from 'src/modules/locations/domain/ports/repository/state.repository.port';
 import { StateEntity } from 'src/modules/locations/domain/entities/state.entity';
@@ -19,7 +19,9 @@ describe('UpdateStateUseCase', () => {
     const states = { findByUuid: jest.fn().mockResolvedValue(null), update: jest.fn() };
     const useCase = new UpdateStateUseCase(states as unknown as StateRepositoryPort);
 
-    await expect(useCase.execute('x', { name: 'N' })).rejects.toBeInstanceOf(NotFoundException);
+    await expect(useCase.execute('x', { name: 'N' })).rejects.toMatchObject({
+      code: LOCATION_API_ERROR_CODES.STATE_NOT_FOUND,
+    });
   });
 
   it('updates name and normalizes code when provided', async () => {

@@ -95,6 +95,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/email/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_verifyEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_resendEmailVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -330,6 +362,7 @@ export interface components {
             statusCode: number;
             error: string;
             message: string | string[];
+            code?: string;
             details?: Record<string, never>;
         };
         LoginBodyDto: {
@@ -358,6 +391,13 @@ export interface components {
         ResetPasswordBodyDto: {
             token: string;
             newPassword: string;
+        };
+        VerifyEmailBodyDto: {
+            email: string;
+            code: string;
+        };
+        ResendEmailVerificationBodyDto: {
+            email: string;
         };
         TicketPublicHttpOpenApiDto: {
             id: string;
@@ -658,6 +698,14 @@ export interface operations {
                     "application/json": components["schemas"]["StandardErrorResponseDto"];
                 };
             };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -779,6 +827,84 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResetPasswordBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_verifyEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageEnvelopeOpenApiDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_resendEmailVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendEmailVerificationBodyDto"];
             };
         };
         responses: {

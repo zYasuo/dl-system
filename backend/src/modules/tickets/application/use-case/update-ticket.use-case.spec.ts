@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { TICKET_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import { CachePort } from 'src/common/ports/cache/cache.ports';
 import { Description } from '../../domain/vo/description.vo';
@@ -63,7 +63,7 @@ describe('UpdateTicketUseCase', () => {
     );
   });
 
-  it('throws NotFoundException when ticket missing', async () => {
+  it('throws when ticket missing', async () => {
     ticketRepository.findById.mockResolvedValue(null);
 
     await expect(
@@ -73,13 +73,13 @@ describe('UpdateTicketUseCase', () => {
         status: TicketStatus.IN_PROGRESS,
         updatedAt: updatedAt.toISOString(),
       }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toMatchObject({ code: TICKET_API_ERROR_CODES.NOT_FOUND });
 
     expect(cachePort.incr).not.toHaveBeenCalled();
     expect(cachePort.del).not.toHaveBeenCalled();
   });
 
-  it('throws BadRequestException when updatedAt is not a valid date', async () => {
+  it('throws when updatedAt is not a valid date', async () => {
     ticketRepository.findById.mockResolvedValue(existing);
 
     await expect(
@@ -89,7 +89,7 @@ describe('UpdateTicketUseCase', () => {
         status: TicketStatus.IN_PROGRESS,
         updatedAt: 'not-a-date',
       }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: TICKET_API_ERROR_CODES.INVALID_VERSION });
   });
 
   it('updates repository and deletes ticket cache key', async () => {
@@ -117,7 +117,7 @@ describe('UpdateTicketUseCase', () => {
     expect(cachePort.del).toHaveBeenCalledWith(ticketCacheKey(ticketId));
   });
 
-  it('throws ForbiddenException when user is not the owner', async () => {
+  it('throws when user is not the owner', async () => {
     ticketRepository.findById.mockResolvedValue(existing);
 
     await expect(
@@ -127,6 +127,6 @@ describe('UpdateTicketUseCase', () => {
         status: TicketStatus.IN_PROGRESS,
         updatedAt: updatedAt.toISOString(),
       }),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toMatchObject({ code: TICKET_API_ERROR_CODES.ACCESS_DENIED });
   });
 });

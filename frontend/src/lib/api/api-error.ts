@@ -10,6 +10,7 @@ export class ApiError extends Error {
   readonly statusCode: number;
   readonly errorTitle: string;
   readonly messageBody: string | string[];
+  readonly code?: string;
   readonly details?: unknown;
 
   constructor(body: StandardErrorBody) {
@@ -18,6 +19,7 @@ export class ApiError extends Error {
     this.statusCode = body.statusCode;
     this.errorTitle = body.error;
     this.messageBody = body.message;
+    this.code = body.code;
     this.details = body.details;
   }
 

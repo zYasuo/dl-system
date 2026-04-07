@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { TICKET_API_ERROR_CODES } from '../errors';
 import { randomUUID } from 'node:crypto';
 import { Description } from '../../domain/vo/description.vo';
 import { TicketEntity, TicketStatus } from '../../domain/entities/ticket.entity';
@@ -28,16 +28,20 @@ describe('FindTicketByIdUseCase', () => {
     useCase = new FindTicketByIdUseCase(ticketRepository as unknown as TicketRepositoryPort);
   });
 
-  it('throws NotFoundException when ticket is missing', async () => {
+  it('throws when ticket is missing', async () => {
     ticketRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(ticketId, userId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(ticketId, userId)).rejects.toMatchObject({
+      code: TICKET_API_ERROR_CODES.NOT_FOUND,
+    });
   });
 
-  it('throws ForbiddenException when user is not the owner', async () => {
+  it('throws when user is not the owner', async () => {
     ticketRepository.findById.mockResolvedValue(ticket);
 
-    await expect(useCase.execute(ticketId, randomUUID())).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute(ticketId, randomUUID())).rejects.toMatchObject({
+      code: TICKET_API_ERROR_CODES.ACCESS_DENIED,
+    });
   });
 
   it('returns ticket when found and owned by user', async () => {

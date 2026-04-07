@@ -1,8 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ApplicationException } from 'src/common/errors/application';
 import { COUNTRY_REPOSITORY } from 'src/modules/locations/di.tokens';
 import type { CountryRepositoryPort } from 'src/modules/locations/domain/ports/repository/country.repository.port';
 import { CountryEntity } from 'src/modules/locations/domain/entities/country.entity';
 import type { UpdateCountryBody } from '../dto/country.dto';
+import { LOCATION_API_ERROR_CODES } from '../errors';
 
 @Injectable()
 export class UpdateCountryUseCase {
@@ -11,7 +13,10 @@ export class UpdateCountryUseCase {
   async execute(uuid: string, body: UpdateCountryBody): Promise<CountryEntity> {
     const existing = await this.countries.findByUuid(uuid);
     if (!existing) {
-      throw new NotFoundException('Country not found');
+      throw new ApplicationException(
+        LOCATION_API_ERROR_CODES.COUNTRY_NOT_FOUND,
+        'Country not found',
+      );
     }
     const now = new Date();
     return this.countries.update(
