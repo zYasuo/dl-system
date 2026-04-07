@@ -291,19 +291,19 @@ function ClientsListCard({
                       onClick={() => openEditModal(c.id)}
                     >
                       <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      <TableCell className="hidden sm:table-cell">
                         {clientDocumentLabel(c) ?? "—"}
                       </TableCell>
-                      <TableCell className="hidden text-muted-foreground lg:table-cell">
+                      <TableCell className="hidden lg:table-cell">
                         {c.address.city}
                       </TableCell>
                       <TableCell
-                        className="hidden max-w-[220px] truncate text-muted-foreground xl:table-cell"
+                        className="hidden max-w-[220px] truncate xl:table-cell"
                         title={formatClientAddress(c.address)}
                       >
                         {shortAddr}
                       </TableCell>
-                      <TableCell className="hidden text-muted-foreground md:table-cell">
+                      <TableCell className="hidden md:table-cell">
                         {formatDistanceToNow(new Date(c.updatedAt), {
                           addSuffix: true,
                           locale: pt,
