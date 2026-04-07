@@ -5,8 +5,12 @@ import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
 import { cn } from "@/lib/utils"
+import {
+  sanitizeChartCssColor,
+  sanitizeChartDomId,
+  sanitizeChartSeriesKey,
+} from "@/lib/ui/safe-chart-css"
 
-// Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
@@ -57,7 +61,9 @@ function ChartContainer({
   }
 }) {
   const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const chartId = sanitizeChartDomId(
+    `chart-${id ?? uniqueId.replace(/:/g, "")}`,
+  )
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -82,9 +88,15 @@ function ChartContainer({
 }
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme ?? config.color
-  )
+  const safeId = sanitizeChartDomId(id)
+  const colorConfig = Object.entries(config)
+    .map(([key, cfg]) => {
+      const safeKey = sanitizeChartSeriesKey(key)
+      if (!safeKey) return null
+      if (!(cfg.theme ?? cfg.color)) return null
+      return [safeKey, cfg] as const
+    })
+    .filter((row): row is readonly [string, ChartConfig[string]] => row != null)
 
   if (!colorConfig.length) {
     return null
@@ -96,14 +108,17 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color =
+    const raw =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
       itemConfig.color
+    if (!raw) return null
+    const color = sanitizeChartCssColor(raw)
     return color ? `  --color-${key}: ${color};` : null
   })
+  .filter((line): line is string => line != null)
   .join("\n")}
 }
 `

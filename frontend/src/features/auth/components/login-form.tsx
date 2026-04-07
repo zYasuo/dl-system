@@ -17,6 +17,7 @@ import {
 } from "@/features/auth/schemas/login.schema";
 import { AUTH_API_ERROR_CODES } from "@/lib/api/api-error-codes";
 import { ApiError } from "@/lib/api/api-error";
+import { safeSameOriginPath } from "@/lib/navigation/safe-same-origin-path";
 import { cn } from "@/lib/utils";
 import { ErrorAlert } from "@/shared/components/error-alert";
 import { FormField } from "@/shared/components/form-field";
@@ -53,7 +54,7 @@ export function LoginForm() {
     }
   }, [emailParam, form.setValue]);
 
-  const next = searchParams.get("next") ?? "/dashboard";
+  const nextPath = safeSameOriginPath(searchParams.get("next"));
 
   return (
     <AuthCard
@@ -85,7 +86,7 @@ export function LoginForm() {
             const result = await login(values.email, values.password);
             if (result.ok) {
               toast.success(t("successToast"));
-              router.replace(next.startsWith("/") ? next : "/dashboard");
+              router.replace(nextPath);
               return;
             }
             if (result.code === AUTH_API_ERROR_CODES.EMAIL_NOT_VERIFIED) {

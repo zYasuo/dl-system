@@ -44,7 +44,9 @@ export function CitiesListView() {
   const [stateUuid, setStateUuid] = useState("");
 
   useEffect(() => {
-    setStateUuid("");
+    queueMicrotask(() => {
+      setStateUuid("");
+    });
   }, [countryUuid]);
 
   useEffect(() => {
